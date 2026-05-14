@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Nutrient Check{% endblock %}</title>
+  {% block meta %}{% endblock %}
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="/" class="site-logo">🌿 Nutrient Check</a>
+      <a href="/nutrients" class="btn-nav">All Nutrients</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>Data sourced from
+      <a href="https://ods.od.nih.gov/" target="_blank" rel="noopener">NIH ODS</a>,
+      <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">USDA FoodData Central</a>,
+      <a href="https://www.hsph.harvard.edu/nutritionsource/" target="_blank" rel="noopener">Harvard T.H. Chan School of Public Health</a>,
+      <a href="https://my.clevelandclinic.org/" target="_blank" rel="noopener">Cleveland Clinic</a>, and
+      <a href="https://www.mayoclinic.org/" target="_blank" rel="noopener">Mayo Clinic</a>.
+    </p>
+    <p style="margin-top:0.4rem;"><strong>This app is for educational purposes only and is not medical advice.</strong></p>
+  </footer>
+
+  <script src="/static/main.js"></script>
+</body>
+</html>

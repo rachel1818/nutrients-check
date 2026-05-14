@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}All Nutrients — Nutrient Check{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Browse all nutrients by category — vitamins, minerals, macronutrients, and fatty acids.">
+{% endblock %}
+
+{% block content %}
+<div class="all-nutrients-page">
+  <h1>All Nutrients</h1>
+  <p style="color:#7a5c4a;margin-bottom:1rem;">Browse by category. Click any nutrient to see food sources, absorption tips, and body benefits.</p>
+
+  {% set category_labels = {
+    "Vitamins": "💊 Vitamins",
+    "Minerals": "🪨 Minerals",
+    "Macronutrients": "⚡ Macronutrients",
+    "Fatty Acids": "🐟 Fatty Acids"
+  } %}
+
+  {% for category, items in nutrients | groupby("category") %}
+  <div class="category-section">
+    <h2>{{ category_labels.get(category, category) }}</h2>
+    <div class="nutrient-grid">
+      {% for nutrient in items %}
+      <a href="/nutrients/{{ nutrient.id }}" class="category-pill">{{ nutrient.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if not nutrients %}
+  <p class="placeholder-msg" style="margin-top:2rem;">No nutrients have been added yet. Run the seed script to populate the database.</p>
+  {% endif %}
+</div>
+{% endblock %}

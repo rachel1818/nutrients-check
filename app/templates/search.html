@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if nutrient %}{{ nutrient.name }} — Nutrient Check{% else %}Search — Nutrient Check{% endif %}
+{% endblock %}
+
+{% block meta %}
+{% if nutrient %}
+<meta name="description" content="Learn about {{ nutrient.name }}: food sources, absorption tips, and why your body needs it.">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="results-page">
+
+  <!-- Disclaimer banner -->
+  <div class="disclaimer-banner" role="note">
+    ⚠️ This app is for educational purposes only and is not medical advice. Always consult a healthcare professional.
+  </div>
+
+  {% if nutrient %}
+  <!-- ── Found a nutrient ──────────────────────────────────────────────── -->
+  <div class="results-header">
+    <h1>{{ nutrient.name }}</h1>
+    {% if nutrient.synonyms %}
+    <p style="color:#7a5c4a;font-size:0.9rem;margin-top:0.3rem;">
+      Also known as: {{ nutrient.synonyms | map(attribute='synonym') | join(', ') }}
+    </p>
+    {% endif %}
+  </div>
+
+  <div class="results-grid">
+
+    <!-- ── Left: Food Sources ───────────────────────────────────────────── -->
+    <div class="results-column">
+      <div class="column-title">🥩 Foods That Provide This Nutrient</div>
+
+      {% if top_foods %}
+      <ul class="food-list" id="food-list">
+        {% for food in top_foods %}
+        <li class="food-card">
+          <h4>{{ food.food_name }}</h4>
+          <div class="food-amount">{{ food.amount }} {{ food.unit }}</div>
+          <div class="food-serving">Per {{ food.serving_size }}</div>
+          {% if food.bioavailability_note %}
+          <div class="food-note">{{ food.bioavailability_note }}</div>
+          {% endif %}
+          {% if food.preparation_note %}
+          <div class="food-note">Prep tip: {{ food.preparation_note }}</div>
+          {% endif %}
+          <div class="food-source">
+            <a href="{{ food.source.url }}" target="_blank" rel="noopener" class="source-link">
+              [{{ food.source.name }}]
+            </a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+
+      {% if total_foods > 10 %}
+      <button
+        id="show-more-foods"
+        class="show-more-btn"
+        data-nutrient-id="{{ nutrient.id }}"
+        data-offset="10"
+        aria-label="Load more food sources"
+      >Show more ({{ total_foods - 10 }} remaining)</button>
+      {% endif %}
+
+      {% else %}
+      <p class="placeholder-msg">No food source data available yet for this nutrient.</p>
+      {% endif %}
+    </div>
+
+    <!-- ── Middle: Absorption ───────────────────────────────────────────── -->
+    <div class="results-column">
+      <div class="column-title">⬆️ What Improves Absorption</div>
+
+      {% if nutrient.absorption_helpers %}
+      <ul class="absorption-list">
+        {% for helper in nutrient.absorption_helpers %}
+        <li class="absorption-card">
+          <h4>{{ helper.helper_name }}
+            <span style="font-size:0.75rem;font-weight:400;color:#7a5c4a;">({{ helper.helper_type }})</span>
+          </h4>
+          <p>{{ helper.description }}</p>
+          <div class="absorption-source">
+            <a href="{{ helper.source.url }}" target="_blank" rel="noopener" class="source-link">
+              [{{ helper.source.name }}]
+            </a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="placeholder-msg">No absorption helper data available yet for this nutrient.</p>
+      {% endif %}
+
+      <div class="section-divider">⬇️ What Reduces Absorption</div>
+
+      {% if nutrient.absorption_blockers %}
+      <ul class="absorption-list">
+        {% for blocker in nutrient.absorption_blockers %}
+        <li class="absorption-card blocker">
+          <h4>{{ blocker.blocker_name }}
+            <span style="font-size:0.75rem;font-weight:400;color:#7a5c4a;">({{ blocker.blocker_type }})</span>
+          </h4>
+          <p>{{ blocker.description }}</p>
+          <div class="absorption-source">
+            <a href="{{ blocker.source.url }}" target="_blank" rel="noopener" class="source-link">
+              [{{ blocker.source.name }}]
+            </a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="placeholder-msg">No absorption blocker data available yet for this nutrient.</p>
+      {% endif %}
+    </div>
+
+    <!-- ── Right: Role in Body + RDA ───────────────────────────────────── -->
+    <div class="results-column">
+      <div class="column-title">🫀 Role in the Body</div>
+
+      {% if nutrient.body_roles %}
+      {% for role in nutrient.body_roles %}
+      <div class="body-role-card">
+        <h4>{{ role.body_system | title }}</h4>
+        <p>{{ role.explanation }}</p>
+        {% if role.deficiency_signs %}
+        <div class="deficiency-signs">⚠️ Deficiency signs: {{ role.deficiency_signs }}</div>
+        {% endif %}
+        <div class="food-source" style="margin-top:0.4rem;">
+          <a href="{{ role.source.url }}" target="_blank" rel="noopener" class="source-link">
+            [{{ role.source.name }}]
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="placeholder-msg">No body role data available yet for this nutrient.</p>
+      {% endif %}
+
+      <!-- RDA Table -->
+      {% if nutrient.rda_values %}
+      <div class="rda-section">
+        <div class="rda-table-title">Recommended Daily Allowance (RDA / AI)</div>
+        <table class="rda-table" aria-label="RDA values for {{ nutrient.name }}">
+          <thead>
+            <tr>
+              <th>Age Group</th>
+              <th>Sex</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>UL</th>
+              <th class="rda-bar-cell"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rda in nutrient.rda_values %}
+            {% set bar_pct = ((rda.value / rda.upper_limit * 100) | round | int) if rda.upper_limit else 55 %}
+            {% set bar_pct = [bar_pct, 100] | min %}
+            <tr>
+              <td>{{ rda.age_group }}</td>
+              <td>{{ rda.sex | title }}</td>
+              <td>{{ rda.value }} {{ rda.unit }}</td>
+              <td>{{ rda.intake_type }}</td>
+              <td>{% if rda.upper_limit %}{{ rda.upper_limit }} {{ rda.unit }}{% else %}Not established{% endif %}</td>
+              <td class="rda-bar-cell">
+                <div class="rda-bar-container">
+                  <div class="rda-bar" style="--bar-target: {{ bar_pct }}%;" aria-hidden="true"></div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if nutrient.rda_values %}
+        <div class="food-source" style="margin-top:0.5rem;">
+          <a href="{{ nutrient.rda_values[0].source.url }}" target="_blank" rel="noopener" class="source-link">
+            [{{ nutrient.rda_values[0].source.name }}]
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div><!-- /results-grid -->
+
+  {% elif suggestions %}
+  <!-- ── Fuzzy suggestions ─────────────────────────────────────────────── -->
+  <div class="not-found-section">
+    <h2>No results for "{{ query }}"</h2>
+    <p>Did you mean one of these?</p>
+    <ul class="suggestions-list">
+      {% for s in suggestions %}
+      <li><a href="/search?nutrient={{ s.name | urlencode }}">{{ s.name }}</a></li>
+      {% endfor %}
+    </ul>
+    <p style="margin-top:1.5rem;"><a href="/">← Back to search</a></p>
+  </div>
+
+  {% elif query %}
+  <!-- ── Not found, no suggestions ────────────────────────────────────── -->
+  <div class="not-found-section">
+    <h2>No results for "{{ query }}"</h2>
+    <p>We couldn't find that nutrient. Try searching for something like <a href="/search?nutrient=Vitamin+C">Vitamin C</a>, <a href="/search?nutrient=Iron">Iron</a>, or <a href="/search?nutrient=Calcium">Calcium</a>.</p>
+    <p style="margin-top:1rem;"><a href="/nutrients">Browse all nutrients →</a></p>
+  </div>
+
+  {% else %}
+  <!-- ── No query ──────────────────────────────────────────────────────── -->
+  <div class="not-found-section">
+    <h2>Enter a nutrient to search</h2>
+    <p><a href="/">← Back to home</a></p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
