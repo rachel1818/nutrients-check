@@ -272,11 +272,59 @@ function initRdaBars() {
   bars.forEach((bar) => observer.observe(bar));
 }
 
-/* ─── 5. Card entrance animations ──────────────────────────────────────── */
+/* ─── 5. Micro-animations ───────────────────────────────────────────────── */
 function initCardAnimations() {
+  _slideFoodCards();
+  _fadeColumns();
+  _bouncePills();
+}
+
+/* Food cards slide in from the left, staggered 80 ms apart */
+function _slideFoodCards() {
   const cards = document.querySelectorAll(".food-card");
-  cards.forEach((card, i) => {
-    card.style.animationDelay = `${i * 60}ms`;
+  if (!cards.length || !window.IntersectionObserver) {
+    // Fallback: show all immediately
+    cards.forEach(c => c.classList.add("card-in"));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const card  = entry.target;
+      const index = [...cards].indexOf(card);
+      setTimeout(() => card.classList.add("card-in"), index * 80);
+      observer.unobserve(card);
+    });
+  }, { threshold: 0.08 });
+  cards.forEach(card => observer.observe(card));
+}
+
+/* Results columns fade up, each delayed 120 ms more than the previous */
+function _fadeColumns() {
+  const cols = document.querySelectorAll(".results-column");
+  if (!cols.length || !window.IntersectionObserver) {
+    cols.forEach(c => c.classList.add("col-in"));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const col   = entry.target;
+      const index = [...cols].indexOf(col);
+      setTimeout(() => col.classList.add("col-in"), index * 120);
+      observer.unobserve(col);
+    });
+  }, { threshold: 0.04 });
+  cols.forEach(col => observer.observe(col));
+}
+
+/* Category pills bounce in with staggered delay on the All Nutrients page */
+function _bouncePills() {
+  const pills = document.querySelectorAll(".category-pill");
+  if (!pills.length) return;
+  pills.forEach((pill, i) => {
+    pill.classList.add("pill-init");
+    pill.style.animationDelay = `${i * 38}ms`;
   });
 }
 

@@ -19,8 +19,44 @@
   </div>
 
   {% if nutrient %}
+  <!-- ── Emoji → nutrient mapping ─────────────────────────────────────── -->
+  {% set emoji_map = {
+    "Vitamin A":              "🥕",
+    "Vitamin B1":             "🌾",
+    "Vitamin B2":             "🥛",
+    "Vitamin B3":             "🍗",
+    "Vitamin B5":             "🥑",
+    "Vitamin B6":             "🍌",
+    "Vitamin B7":             "🥚",
+    "Vitamin B9":             "🥬",
+    "Vitamin B12":            "🐟",
+    "Vitamin C":              "🍊",
+    "Vitamin D":              "☀️",
+    "Vitamin E":              "🌻",
+    "Vitamin K":              "🥦",
+    "Iron":                   "🥩",
+    "Calcium":                "🦴",
+    "Zinc":                   "🦪",
+    "Magnesium":              "🥜",
+    "Potassium":              "🍌",
+    "Phosphorus":             "🐠",
+    "Selenium":               "🌰",
+    "Iodine":                 "🌊",
+    "Copper":                 "🦞",
+    "Sodium":                 "🧂",
+    "Dietary Fiber":          "🌾",
+    "Added Sugar":            "🍬",
+    "Protein":                "💪",
+    "Omega-3 Fatty Acids":    "🐟",
+    "Omega-6 Fatty Acids":    "🌻",
+    "Omega-9 Fatty Acids":    "🫒"
+  } %}
+
   <!-- ── Found a nutrient ──────────────────────────────────────────────── -->
   <div class="results-header">
+    <span class="nutrient-emoji-anchor" role="img" aria-hidden="true">
+      {{ emoji_map.get(nutrient.name, "🌿") }}
+    </span>
     <h1>{{ nutrient.name }}</h1>
     {% if nutrient.synonyms %}
     <p style="color:#7a5c4a;font-size:0.9rem;margin-top:0.3rem;">

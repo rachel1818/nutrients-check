@@ -16,52 +16,6 @@
 }
 
 
-/* ─── Painterly Watercolour Background ──────────────────────────────────── */
-.bg-scene {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  overflow: hidden;
-}
-.bg-scene svg { display: block; width: 100%; height: 100%; }
-
-/* Warm cream wash — ties the SVG into the earthy palette */
-.bg-scene::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(253, 246, 236, 0.10);
-  pointer-events: none;
-}
-
-/* Sun outer glow — slow gentle pulse */
-.bg-sun-glow {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: wcSunPulse 7s ease-in-out infinite;
-}
-@keyframes wcSunPulse {
-  0%, 100% { opacity: 0.60; transform: scale(1); }
-  50%       { opacity: 0.88; transform: scale(1.10); }
-}
-
-/* Clouds — very slow, dreamy drift */
-.wc-cloud-1 { animation: wcC1 50s ease-in-out infinite alternate; }
-.wc-cloud-2 { animation: wcC2 42s ease-in-out infinite alternate; }
-.wc-cloud-3 { animation: wcC3 58s ease-in-out infinite alternate; }
-@keyframes wcC1 { from { transform: translateX(-20px); } to { transform: translateX(20px); } }
-@keyframes wcC2 { from { transform: translateX(14px);  } to { transform: translateX(-14px); } }
-@keyframes wcC3 { from { transform: translateX(-16px); } to { transform: translateX(16px); } }
-
-/* Canopy — gentle sway anchored at trunk base */
-.wc-canopy {
-  transform-origin: 680px 648px;
-  animation: wcSway 9s ease-in-out infinite;
-}
-@keyframes wcSway {
-  0%, 100% { transform: rotate(-1.2deg); }
-  50%       { transform: rotate( 1.2deg); }
-}
 
 /* ─── Custom Cursor ─────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; cursor: none; }
@@ -136,6 +90,67 @@ a:hover { text-decoration: underline; }
 @keyframes slideUpFade {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Emoji anchor — drops in, then bobs gently forever ─────────────────── */
+.nutrient-emoji-anchor {
+  display: block;
+  font-size: 5.5rem;
+  line-height: 1;
+  text-align: center;
+  margin: 0.5rem 0 1.2rem;
+  filter: drop-shadow(0 8px 20px rgba(44, 24, 16, 0.20));
+  animation:
+    emojiDrop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    emojiBob  3.2s ease-in-out 0.8s infinite;
+}
+@keyframes emojiDrop {
+  from { opacity: 0; transform: translateY(-44px) scale(0.45) rotate(-10deg); }
+  to   { opacity: 1; transform: translateY(0)     scale(1)    rotate(0deg); }
+}
+@keyframes emojiBob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* ─── Food cards — slide in from left (JS adds .card-in) ────────────────── */
+/* Override the old slideUpFade animation; JS now drives each card */
+.food-card {
+  animation: none;          /* cancel the CSS-only slideUpFade */
+  opacity: 0;
+  transform: translateX(-36px);
+  transition:
+    opacity    0.38s ease,
+    transform  0.38s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.2s,
+    border-left-color 0.12s;
+}
+.food-card.card-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Results columns — fade up (JS adds .col-in) ───────────────────────── */
+.results-column {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity   0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.results-column.col-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Category pills — bounce in on load (JS adds .pill-init) ───────────── */
+.category-pill.pill-init {
+  opacity: 0;
+  animation: pillBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes pillBounceIn {
+  from { opacity: 0; transform: scale(0.55) translateY(14px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
 
 @keyframes barFill {
@@ -676,13 +691,17 @@ a:hover { text-decoration: underline; }
   font-size: 0.9rem;
   color: var(--text);
   text-decoration: none;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s,
+              transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s;
 }
 .category-pill:hover {
   background: var(--terracotta);
   color: #fff;
   border-color: var(--terracotta);
   text-decoration: none;
+  transform: scale(1.10) translateY(-4px);
+  box-shadow: 0 6px 18px rgba(194, 113, 79, 0.35);
 }
 
 /* ─── Error Pages ───────────────────────────────────────────────────────── */

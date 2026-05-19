@@ -741,6 +741,9 @@ def seed_all(db: Session) -> None:
     # ── All remaining vitamins, minerals, and macronutrients ─────────────────
     _seed_extended_nutrients(db)
 
+    # ── Indian vegetables, grains, and pulses ────────────────────────────────
+    _seed_indian_foods(db)
+
     db.commit()
     print(f"Seeded {db.query(Nutrient).count()} nutrients successfully.")
 
@@ -2305,6 +2308,462 @@ def _seed_extended_nutrients(db: Session) -> None:  # noqa: C901
              "upper_limit": None, "source_name": HARVARD, "source_url": HARV_PROT},
         ],
     )
+
+
+
+# ─── Indian source URL constants ─────────────────────────────────────────────
+NIN_HYD   = "https://www.nin.res.in/"                             # National Institute of Nutrition, Hyderabad (ICMR-NIN)
+NIN_NV    = "https://www.nin.res.in/nutrition-Atlas/nutritive_value.html"  # NIN Nutritive Value of Indian Foods
+FSSAI_URL = "https://www.fssai.gov.in/"                          # Food Safety and Standards Authority of India
+ICMR_DG   = "https://www.nin.res.in/downloads/DietaryGuidelinesforNINwebsite.pdf"  # ICMR-NIN Dietary Guidelines 2020
+
+
+def _seed_indian_foods(db: Session) -> None:
+    """
+    Add Indian vegetables, grains, millets, and pulses as additional food
+    sources for existing nutrients.  All values per NIN Hyderabad 'Nutritive
+    Value of Indian Foods' and ICMR-NIN Dietary Guidelines 2020.
+    Source: National Institute of Nutrition (ICMR-NIN), Hyderabad.
+    """
+
+    # Ensure NIN sources exist
+    def _src(name: str, url: str) -> Source:
+        s = db.query(Source).filter(Source.url == url).first()
+        if not s:
+            s = Source(name=name, url=url)
+            db.add(s)
+            db.flush()
+        return s
+
+    nin     = _src("National Institute of Nutrition (ICMR-NIN), Hyderabad", NIN_HYD)
+    nin_nv  = _src("NIN — Nutritive Value of Indian Foods", NIN_NV)
+    fssai   = _src("FSSAI — Food Safety and Standards Authority of India", FSSAI_URL)
+    icmr_dg = _src("ICMR-NIN Dietary Guidelines for Indians 2020", ICMR_DG)
+
+    def _add_foods(nutrient_name: str, foods: list[dict]) -> None:
+        nutrient = db.query(Nutrient).filter(Nutrient.name == nutrient_name).first()
+        if not nutrient:
+            return
+        for f in foods:
+            src_obj = f.pop("source_obj")
+            # Skip if this food name already exists for this nutrient
+            exists = (
+                db.query(NutrientFoodSource)
+                .filter(
+                    NutrientFoodSource.nutrient_id == nutrient.id,
+                    NutrientFoodSource.food_name == f["food_name"],
+                )
+                .first()
+            )
+            if not exists:
+                db.add(NutrientFoodSource(nutrient_id=nutrient.id, source_id=src_obj.id, **f))
+
+    # ── IRON ─────────────────────────────────────────────────────────────────
+    _add_foods("Iron", [
+        {"food_name": "Horse Gram / Kulthi Dal (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 6.77, "unit": "mg",
+         "bioavailability_note": "Non-heme iron; absorption significantly improved by pairing with tamarind chutney or amla (Vitamin C sources).",
+         "source_obj": nin_nv},
+        {"food_name": "Masoor Dal / Red Lentils (cooked)", "serving_size": "1/2 cup (100g)",
+         "amount": 4.97, "unit": "mg",
+         "bioavailability_note": "Non-heme iron; common everyday dal — pair with tomato or lime to boost absorption.",
+         "source_obj": nin_nv},
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 4.0, "unit": "mg",
+         "bioavailability_note": "Non-heme iron. Fermenting bajra dough (as for bhakri or roti) reduces phytates and increases iron bioavailability.",
+         "preparation_note": "Ferment the dough overnight to reduce phytate content and improve mineral absorption.",
+         "source_obj": nin_nv},
+        {"food_name": "Jowar / Sorghum (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 2.05, "unit": "mg",
+         "bioavailability_note": "Non-heme iron; combine with Vitamin C-rich foods such as tamarind or raw onion.",
+         "source_obj": nin_nv},
+        {"food_name": "Ragi / Finger Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 1.95, "unit": "mg",
+         "bioavailability_note": "Non-heme iron. Soaking and sprouting ragi significantly reduces phytates.",
+         "preparation_note": "Soak overnight and sprout before cooking to maximise iron and calcium availability.",
+         "source_obj": nin_nv},
+        {"food_name": "Methi Leaves / Fenugreek Leaves (raw)", "serving_size": "1 cup (30g)",
+         "amount": 0.58, "unit": "mg",
+         "bioavailability_note": "Non-heme iron; excellent when combined with tomato-based curries or lemon squeeze.",
+         "source_obj": nin_nv},
+        {"food_name": "Amaranth Leaves / Chaulai Saag (raw)", "serving_size": "1 cup (40g)",
+         "amount": 2.07, "unit": "mg",
+         "bioavailability_note": "Among the richest leafy vegetable sources of iron in the Indian diet.",
+         "source_obj": nin_nv},
+        {"food_name": "Rajma / Kidney Beans (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 5.06, "unit": "mg",
+         "bioavailability_note": "Non-heme iron; pressure-cooking destroys most lectins and improves mineral bioavailability.",
+         "source_obj": nin_nv},
+        {"food_name": "Kala Chana / Black Chickpeas (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 4.6, "unit": "mg",
+         "bioavailability_note": "Non-heme iron; soaking overnight and discarding the water reduces phytates.",
+         "source_obj": nin_nv},
+        {"food_name": "Curry Leaves / Kari Patta (fresh)", "serving_size": "10 leaves (5g)",
+         "amount": 0.35, "unit": "mg",
+         "bioavailability_note": "Used as tempering; small quantity but a regular dietary contributor across South Indian cooking.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── CALCIUM ───────────────────────────────────────────────────────────────
+    _add_foods("Calcium", [
+        {"food_name": "Ragi / Finger Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 172, "unit": "mg",
+         "bioavailability_note": "Ragi is the richest plant-source of calcium in the Indian diet — higher than milk per calorie. Sprouting enhances absorption.",
+         "preparation_note": "Sprout ragi for 24–48 hours before cooking. Sprouting increases calcium bioavailability and reduces phytate interference.",
+         "source_obj": nin_nv},
+        {"food_name": "Sesame Seeds / Til (roasted)", "serving_size": "1 tbsp (9g)",
+         "amount": 88, "unit": "mg",
+         "bioavailability_note": "Very calcium-dense. Used in chikkis, chutneys, and laddoos across India.",
+         "source_obj": nin_nv},
+        {"food_name": "Amaranth Leaves / Chaulai Saag (raw)", "serving_size": "1 cup (40g)",
+         "amount": 159, "unit": "mg",
+         "bioavailability_note": "High calcium; also contains moderate oxalate — lightly blanching and discarding water reduces oxalate.",
+         "source_obj": nin_nv},
+        {"food_name": "Drumstick Leaves / Moringa Leaves (fresh)", "serving_size": "1/2 cup (25g)",
+         "amount": 110, "unit": "mg",
+         "bioavailability_note": "Moringa leaves have exceptional calcium density; used in sambar and stir-fries across South India.",
+         "source_obj": nin_nv},
+        {"food_name": "Methi Leaves / Fenugreek Leaves (raw)", "serving_size": "1 cup (30g)",
+         "amount": 119, "unit": "mg",
+         "bioavailability_note": "High calcium for a leafy green; widely used in North Indian cooking (methi paratha, aloo methi).",
+         "source_obj": nin_nv},
+        {"food_name": "Urad Dal / Black Gram (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 154, "unit": "mg",
+         "bioavailability_note": "One of the highest-calcium dals; base of idli and dosa batter — fermentation improves mineral availability.",
+         "preparation_note": "Fermented preparations (idli, dosa) have improved mineral bioavailability over unfermented urad.",
+         "source_obj": nin_nv},
+        {"food_name": "Horse Gram / Kulthi Dal (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 143, "unit": "mg",
+         "bioavailability_note": "Exceptionally nutritious legume; widely consumed in Karnataka, Andhra Pradesh, and Maharashtra.",
+         "source_obj": nin_nv},
+        {"food_name": "Lotus Seeds / Makhana (roasted)", "serving_size": "1 oz (28g)",
+         "amount": 56, "unit": "mg",
+         "bioavailability_note": "Low-fat, calcium-containing snack; popular in North Indian fasting foods and kheer.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── VITAMIN A ─────────────────────────────────────────────────────────────
+    _add_foods("Vitamin A", [
+        {"food_name": "Drumstick Leaves / Moringa Leaves (fresh)", "serving_size": "1/2 cup (25g)",
+         "amount": 1891, "unit": "mcg RAE",
+         "bioavailability_note": "Moringa leaves contain exceptionally high beta-carotene (provitamin A). Consume with a small amount of fat — a tempering of mustard seeds in oil dramatically improves absorption.",
+         "source_obj": nin_nv},
+        {"food_name": "Curry Leaves / Kari Patta (fresh)", "serving_size": "10 leaves (5g)",
+         "amount": 67, "unit": "mcg RAE",
+         "bioavailability_note": "Used in tadka (tempering) — the oil-based cooking method improves beta-carotene absorption.",
+         "source_obj": nin_nv},
+        {"food_name": "Amaranth Leaves / Chaulai Saag (raw)", "serving_size": "1 cup (40g)",
+         "amount": 133, "unit": "mcg RAE",
+         "bioavailability_note": "Rich in beta-carotene; cook with a small amount of oil for best absorption.",
+         "source_obj": nin_nv},
+        {"food_name": "Methi Leaves / Fenugreek Leaves (raw)", "serving_size": "1 cup (30g)",
+         "amount": 67, "unit": "mcg RAE",
+         "bioavailability_note": "Significant beta-carotene source; used widely in parathas and subzis across North India.",
+         "source_obj": nin_nv},
+        {"food_name": "Bathua / Chenopodium Leaves (raw)", "serving_size": "1 cup (40g)",
+         "amount": 266, "unit": "mcg RAE",
+         "bioavailability_note": "Seasonal North Indian green (winter); rich in beta-carotene and iron.",
+         "source_obj": nin_nv},
+        {"food_name": "Drumstick Pods / Sahjan (cooked)", "serving_size": "1/2 cup (50g)",
+         "amount": 18, "unit": "mcg RAE",
+         "bioavailability_note": "Pods contain modest beta-carotene; leaves are far more nutrient-dense.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── VITAMIN C ─────────────────────────────────────────────────────────────
+    _add_foods("Vitamin C", [
+        {"food_name": "Amla / Indian Gooseberry (raw)", "serving_size": "1 medium (60g)",
+         "amount": 360, "unit": "mg",
+         "bioavailability_note": "Amla has the highest Vitamin C content of any commonly eaten fruit — about 5× an orange per gram. Unusually stable to heat due to tannin co-presence. Consume raw, pickled, or as murabba for maximum benefit.",
+         "preparation_note": "Amla's Vitamin C is unusually heat-stable compared to other fruits. Both raw and cooked preparations retain significant Vitamin C.",
+         "source_obj": nin_nv},
+        {"food_name": "Drumstick Pods / Sahjan (cooked)", "serving_size": "1/2 cup (50g)",
+         "amount": 60, "unit": "mg",
+         "bioavailability_note": "Significant Vitamin C source; key ingredient in South Indian sambar.",
+         "source_obj": nin_nv},
+        {"food_name": "Bitter Gourd / Karela (raw)", "serving_size": "1/2 cup (60g)",
+         "amount": 53, "unit": "mg",
+         "bioavailability_note": "High Vitamin C; widely consumed across India for its hypoglycaemic properties.",
+         "source_obj": nin_nv},
+        {"food_name": "Amaranth Leaves / Chaulai Saag (raw)", "serving_size": "1 cup (40g)",
+         "amount": 40, "unit": "mg",
+         "bioavailability_note": "Significant Vitamin C for a cooked green; consume lightly stir-fried to preserve Vitamin C.",
+         "source_obj": nin_nv},
+        {"food_name": "Lotus Root / Kamal Kakdi (raw)", "serving_size": "1/2 cup (60g)",
+         "amount": 27, "unit": "mg",
+         "bioavailability_note": "Moderate Vitamin C; used in Kashmiri and Bengali cuisines.",
+         "source_obj": nin_nv},
+        {"food_name": "Ridge Gourd / Turai (raw)", "serving_size": "1/2 cup (65g)",
+         "amount": 18, "unit": "mg",
+         "bioavailability_note": "Commonly consumed across India; Vitamin C content preserved when cooked briefly.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── VITAMIN B9 / FOLATE ───────────────────────────────────────────────────
+    _add_foods("Vitamin B9", [
+        {"food_name": "Moong Dal / Green Gram (sprouted)", "serving_size": "1/2 cup (50g)",
+         "amount": 84, "unit": "mcg DFE",
+         "bioavailability_note": "Sprouting moong dal dramatically increases folate content and bioavailability. A key everyday Indian ingredient.",
+         "preparation_note": "Sprout by soaking overnight and leaving for 12–24 hours. Consume raw in chaat or lightly steamed.",
+         "source_obj": nin_nv},
+        {"food_name": "Toor Dal / Pigeon Peas (cooked)", "serving_size": "1/2 cup (100g)",
+         "amount": 40, "unit": "mcg DFE",
+         "bioavailability_note": "The most commonly consumed dal in India; everyday source of folate across the subcontinent.",
+         "source_obj": nin_nv},
+        {"food_name": "Chana Dal / Split Chickpeas (cooked)", "serving_size": "1/2 cup (100g)",
+         "amount": 59, "unit": "mcg DFE",
+         "bioavailability_note": "Good folate source; pressure cooking preserves more folate than open-pot boiling.",
+         "source_obj": nin_nv},
+        {"food_name": "Urad Dal / Black Gram (cooked)", "serving_size": "1/2 cup (100g)",
+         "amount": 55, "unit": "mcg DFE",
+         "bioavailability_note": "Key dal across India; also provides calcium, iron, and protein.",
+         "source_obj": nin_nv},
+        {"food_name": "Methi Leaves / Fenugreek Leaves (raw)", "serving_size": "1 cup (30g)",
+         "amount": 48, "unit": "mcg DFE",
+         "bioavailability_note": "Significant folate for a leafy vegetable; best consumed lightly cooked.",
+         "source_obj": nin_nv},
+        {"food_name": "Rajma / Kidney Beans (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 130, "unit": "mcg DFE",
+         "bioavailability_note": "One of the richest Indian pulse sources of folate; the classic Rajma Chawal of North India.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── MAGNESIUM ─────────────────────────────────────────────────────────────
+    _add_foods("Magnesium", [
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 72, "unit": "mg",
+         "bioavailability_note": "One of the richest magnesium sources in the Indian diet; widely consumed in Rajasthan and Gujarat as bajra roti.",
+         "source_obj": nin_nv},
+        {"food_name": "Jowar / Sorghum (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 66, "unit": "mg",
+         "bioavailability_note": "Good magnesium source; staple grain across Maharashtra, Karnataka, and Andhra Pradesh.",
+         "source_obj": nin_nv},
+        {"food_name": "Ragi / Finger Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 69, "unit": "mg",
+         "bioavailability_note": "Rich in magnesium alongside calcium; staple of Karnataka and Andhra Pradesh.",
+         "source_obj": nin_nv},
+        {"food_name": "Horse Gram / Kulthi Dal (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 60, "unit": "mg",
+         "bioavailability_note": "High magnesium pulse; historically used in Karnataka, Maharashtra, and Andhra cuisine.",
+         "source_obj": nin_nv},
+        {"food_name": "Rajma / Kidney Beans (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 42, "unit": "mg",
+         "bioavailability_note": "Good magnesium source alongside protein and folate.",
+         "source_obj": nin_nv},
+        {"food_name": "Lotus Seeds / Makhana (roasted)", "serving_size": "1 oz (28g)",
+         "amount": 56, "unit": "mg",
+         "bioavailability_note": "Surprisingly high in magnesium for a snack food; used extensively in North Indian fasting meals.",
+         "source_obj": nin_nv},
+        {"food_name": "Sesame Seeds / Til (roasted)", "serving_size": "1 tbsp (9g)",
+         "amount": 32, "unit": "mg",
+         "bioavailability_note": "Very magnesium-dense; used in chikkis (til+jaggery bars) and chutneys across India.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── ZINC ──────────────────────────────────────────────────────────────────
+    _add_foods("Zinc", [
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 1.67, "unit": "mg",
+         "bioavailability_note": "Non-heme zinc; phytate content in bajra reduces bioavailability. Fermenting or soaking the dough significantly improves zinc absorption.",
+         "preparation_note": "Ferment bajra dough overnight for bajra roti to significantly reduce phytate and improve zinc and iron bioavailability.",
+         "source_obj": nin_nv},
+        {"food_name": "Chana Dal / Split Chickpeas (cooked)", "serving_size": "1/2 cup (100g)",
+         "amount": 1.69, "unit": "mg",
+         "bioavailability_note": "Phytate present; bioavailability improved by soaking, sprouting, or pressure cooking.",
+         "source_obj": nin_nv},
+        {"food_name": "Moong Dal / Green Gram (sprouted)", "serving_size": "1/2 cup (50g)",
+         "amount": 0.84, "unit": "mg",
+         "bioavailability_note": "Sprouting increases zinc bioavailability by degrading phytate through endogenous phytase activity.",
+         "source_obj": nin_nv},
+        {"food_name": "Sesame Seeds / Til (roasted)", "serving_size": "1 tbsp (9g)",
+         "amount": 0.65, "unit": "mg",
+         "bioavailability_note": "Concentrated zinc source; regularly used in South Indian chutneys and North Indian sweets.",
+         "source_obj": nin_nv},
+        {"food_name": "Rajma / Kidney Beans (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 0.97, "unit": "mg",
+         "bioavailability_note": "Decent zinc source; pair with rice (Rajma Chawal) which has less phytate, improving meal-level zinc absorption.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── PROTEIN ───────────────────────────────────────────────────────────────
+    _add_foods("Protein", [
+        {"food_name": "Urad Dal / Black Gram (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 12.0, "unit": "g",
+         "bioavailability_note": "High-protein pulse; base of idli/dosa batter. Fermentation improves protein digestibility and reduces antinutrients.",
+         "source_obj": nin_nv},
+        {"food_name": "Masoor Dal / Red Lentils (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 12.5, "unit": "g",
+         "bioavailability_note": "Among the fastest-cooking dals with excellent protein. A complete meal when combined with rice or roti.",
+         "source_obj": nin_nv},
+        {"food_name": "Chana Dal / Split Chickpeas (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 10.4, "unit": "g",
+         "bioavailability_note": "High protein; relatively low glycaemic index among pulses. Pair with whole grains for complementary amino acids.",
+         "source_obj": nin_nv},
+        {"food_name": "Moong Dal / Green Gram (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 12.3, "unit": "g",
+         "bioavailability_note": "High protein dal; one of the most digestible legumes — suitable for all ages including infants and the elderly.",
+         "source_obj": nin_nv},
+        {"food_name": "Toor Dal / Pigeon Peas (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 11.3, "unit": "g",
+         "bioavailability_note": "The most widely consumed dal in India (arhar/toor); backbone of South Indian sambar.",
+         "source_obj": nin_nv},
+        {"food_name": "Horse Gram / Kulthi Dal (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 11.0, "unit": "g",
+         "bioavailability_note": "Exceptionally high protein and iron; widely used in Karnataka and Andhra Pradesh. Often eaten as sprouted kolhapuri usal.",
+         "source_obj": nin_nv},
+        {"food_name": "Ragi / Finger Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 3.65, "unit": "g",
+         "bioavailability_note": "Lower protein than dals but the protein quality is superior to most cereals — ragi contains tryptophan and methionine.",
+         "source_obj": nin_nv},
+        {"food_name": "Soya Chunks / Textured Soy Protein (dry)", "serving_size": "1/4 cup (30g)",
+         "amount": 17.0, "unit": "g",
+         "bioavailability_note": "Complete plant protein (PDCAAS approaching 1.0); widely available and affordable across India as a meat substitute.",
+         "source_obj": nin_nv},
+        {"food_name": "Amaranth Grain / Rajgira (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 7.5, "unit": "g",
+         "bioavailability_note": "Rare complete plant protein grain — contains lysine, which is limiting in most other cereals. Used in rajgira laddoos and fasting foods.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── DIETARY FIBER ─────────────────────────────────────────────────────────
+    _add_foods("Dietary Fiber", [
+        {"food_name": "Horse Gram / Kulthi Dal (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 5.3, "unit": "g",
+         "bioavailability_note": "Exceptionally high fiber among Indian legumes; supports gut health and blood glucose control.",
+         "source_obj": nin_nv},
+        {"food_name": "Chana Dal / Split Chickpeas (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 7.2, "unit": "g",
+         "bioavailability_note": "High soluble and insoluble fiber; one of the lowest glycaemic dals — excellent for blood sugar management.",
+         "source_obj": nin_nv},
+        {"food_name": "Rajma / Kidney Beans (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 6.4, "unit": "g",
+         "bioavailability_note": "High fiber; pressure-cook thoroughly — undercooked kidney beans contain toxic lectins.",
+         "preparation_note": "Always pressure-cook rajma to destroy lectins. Never eat raw or soaked-only kidney beans.",
+         "source_obj": nin_nv},
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 0.65, "unit": "g",
+         "bioavailability_note": "Whole bajra grain retains its bran; bajra roti is significantly higher in fiber than refined wheat roti.",
+         "source_obj": nin_nv},
+        {"food_name": "Jowar / Sorghum (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 0.60, "unit": "g",
+         "bioavailability_note": "Whole jowar retains bran fiber; also contains resistant starch which acts as a prebiotic.",
+         "source_obj": nin_nv},
+        {"food_name": "Ragi / Finger Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 1.8, "unit": "g",
+         "bioavailability_note": "High fiber millet; ragi mudde (finger millet balls) and ragi java (porridge) are traditional high-fiber staples in South India.",
+         "source_obj": nin_nv},
+        {"food_name": "Jackfruit / Kathal (raw, green)", "serving_size": "1/2 cup (75g)",
+         "amount": 1.5, "unit": "g",
+         "bioavailability_note": "Raw/unripe jackfruit has significant fiber; a popular meat substitute in Indian vegetarian cooking.",
+         "source_obj": nin_nv},
+        {"food_name": "Raw Banana / Kachcha Kela (boiled)", "serving_size": "1/2 cup (75g)",
+         "amount": 2.6, "unit": "g",
+         "bioavailability_note": "High in resistant starch (a type of prebiotic fiber) that feeds beneficial gut bacteria. Used in South Indian sabzis and Keralite dishes.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── POTASSIUM ─────────────────────────────────────────────────────────────
+    _add_foods("Potassium", [
+        {"food_name": "Raw Banana / Kachcha Kela (boiled)", "serving_size": "1 medium (100g)",
+         "amount": 401, "unit": "mg",
+         "bioavailability_note": "Raw banana is a potassium-dense staple in South Indian and Keralite cooking.",
+         "source_obj": nin_nv},
+        {"food_name": "Toor Dal / Pigeon Peas (cooked)", "serving_size": "1/2 cup (100g)",
+         "amount": 350, "unit": "mg",
+         "bioavailability_note": "Everyday dal; significant potassium contribution at the population level.",
+         "source_obj": nin_nv},
+        {"food_name": "Yam / Suran / Jimikand (boiled)", "serving_size": "1/2 cup (75g)",
+         "amount": 358, "unit": "mg",
+         "bioavailability_note": "Potassium-rich tuber widely used in Maharashtra (yam sabzi) and Kerala.",
+         "source_obj": nin_nv},
+        {"food_name": "Rajma / Kidney Beans (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 403, "unit": "mg",
+         "bioavailability_note": "High potassium alongside fiber and protein; a nutritionally complete meal with rice.",
+         "source_obj": nin_nv},
+        {"food_name": "Jackfruit / Kathal (ripe, raw)", "serving_size": "1 cup (150g)",
+         "amount": 448, "unit": "mg",
+         "bioavailability_note": "Ripe jackfruit is rich in potassium; the national fruit of Bangladesh and a major seasonal food across South Asia.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── PHOSPHORUS ────────────────────────────────────────────────────────────
+    _add_foods("Phosphorus", [
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 175, "unit": "mg",
+         "bioavailability_note": "High phosphorus millet; phytate reduces bioavailability — fermentation (as in rabri or bhakri) significantly improves absorption.",
+         "source_obj": nin_nv},
+        {"food_name": "Ragi / Finger Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 80, "unit": "mg",
+         "bioavailability_note": "Moderate phosphorus; sprouting reduces phytate and improves mineral bioavailability.",
+         "source_obj": nin_nv},
+        {"food_name": "Sesame Seeds / Til (roasted)", "serving_size": "1 tbsp (9g)",
+         "amount": 57, "unit": "mg",
+         "bioavailability_note": "Dense in phosphorus, calcium, and magnesium; traditional til-gur chikkis are a nutritionally concentrated snack.",
+         "source_obj": nin_nv},
+        {"food_name": "Chana Dal / Split Chickpeas (boiled)", "serving_size": "1/2 cup (100g)",
+         "amount": 150, "unit": "mg",
+         "bioavailability_note": "Good phosphorus source; pressure-cooking improves mineral bioavailability.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── SODIUM ────────────────────────────────────────────────────────────────
+    _add_foods("Sodium", [
+        {"food_name": "Papad / Papadum (roasted)", "serving_size": "1 piece (10g)",
+         "amount": 324, "unit": "mg",
+         "bioavailability_note": "Papad is very high in sodium; often consumed as a side dish — even one piece contributes significantly to daily sodium intake.",
+         "source_obj": fssai},
+        {"food_name": "Pickle / Achaar (mango, lime, or mixed)", "serving_size": "1 tsp (10g)",
+         "amount": 460, "unit": "mg",
+         "bioavailability_note": "Indian pickles are preserved with salt and are among the highest sodium foods in the Indian diet. Limit to 1 tsp per meal.",
+         "source_obj": fssai},
+        {"food_name": "Namkeen / Salted Mixed Snack", "serving_size": "1 oz (28g)",
+         "amount": 340, "unit": "mg",
+         "bioavailability_note": "Common Indian snack mix; a significant sodium source for those consuming traditional snack foods daily.",
+         "source_obj": fssai},
+        {"food_name": "Salted Lassi / Chaas (buttermilk)", "serving_size": "1 cup (240ml)",
+         "amount": 180, "unit": "mg",
+         "bioavailability_note": "Widely consumed across India with meals; sodium content varies significantly with preparation — homemade is lower.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── VITAMIN B1 ─────────────────────────────────────────────────────────────
+    _add_foods("Vitamin B1", [
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 0.21, "unit": "mg",
+         "bioavailability_note": "Good thiamine source; whole bajra retains the bran layer where most B1 is concentrated.",
+         "source_obj": nin_nv},
+        {"food_name": "Moong Dal / Green Gram (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 0.21, "unit": "mg",
+         "bioavailability_note": "Significant thiamine source; a staple protein and B-vitamin source across the Indian subcontinent.",
+         "source_obj": nin_nv},
+        {"food_name": "Toor Dal / Pigeon Peas (raw)", "serving_size": "1/4 cup (50g)",
+         "amount": 0.18, "unit": "mg",
+         "bioavailability_note": "Everyday dal with useful thiamine content; the base of South Indian sambar.",
+         "source_obj": nin_nv},
+        {"food_name": "Whole Wheat Atta (raw)", "serving_size": "1/4 cup (30g)",
+         "amount": 0.13, "unit": "mg",
+         "bioavailability_note": "Whole wheat atta (Indian chapatti flour) retains bran and germ — far more thiamine than refined maida.",
+         "preparation_note": "Always choose whole wheat atta over maida (refined flour) to retain B vitamins and fiber.",
+         "source_obj": nin_nv},
+    ])
+
+    # ── VITAMIN B3 ─────────────────────────────────────────────────────────────
+    _add_foods("Vitamin B3", [
+        {"food_name": "Jowar / Sorghum (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 1.9, "unit": "mg NE",
+         "bioavailability_note": "Good niacin source; a staple grain in Maharashtra and Karnataka where it is consumed as jowar bhakri.",
+         "source_obj": nin_nv},
+        {"food_name": "Bajra / Pearl Millet (raw grain)", "serving_size": "1/4 cup (50g)",
+         "amount": 1.1, "unit": "mg NE",
+         "bioavailability_note": "Moderate niacin; fermentation of bajra dough improves niacin bioavailability.",
+         "source_obj": nin_nv},
+        {"food_name": "Groundnut / Peanut (roasted)", "serving_size": "1 oz (28g)",
+         "amount": 3.8, "unit": "mg NE",
+         "bioavailability_note": "Groundnuts (peanuts) are an excellent and affordable niacin source across the Indian subcontinent.",
+         "source_obj": nin_nv},
+    ])
+
+    db.flush()
 
 
 if __name__ == "__main__":
