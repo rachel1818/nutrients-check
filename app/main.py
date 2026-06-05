@@ -19,7 +19,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.database import Base, engine, get_db
 from app.models import Nutrient, NutrientFoodSource, NutrientSynonym
+from app.chat import answer_about_nutrient
 from app.schemas import (
+    ChatRequest,
     NutrientDetailSchema,
     PaginatedFoodsSchema,
     PaginatedNutrientsSchema,
@@ -178,6 +180,23 @@ async def list_nutrients(offset: int = 0, limit: int = 50, db: Session = Depends
         db.query(Nutrient).order_by(Nutrient.category, Nutrient.name).offset(offset).limit(limit).all()
     )
     return {"items": items, "total": total, "offset": offset, "limit": limit}
+
+
+
+@app.post("/api/chat/{nutrient_id}")
+async def nutrient_chat(
+    nutrient_id: int,
+    body: ChatRequest,
+    db: Session = Depends(get_db),
+):
+    nutrient = db.get(Nutrient, nutrient_id)
+    if not nutrient:
+        raise HTTPException(status_code=404, detail="Nutrient not found")
+    if not body.message.strip():
+        raise HTTPException(status_code=400, detail="message is required")
+    comparison = db.get(Nutrient, body.comparison_id) if body.comparison_id else None
+    history = [{"role": m.role, "content": m.content} for m in body.history]
+    return answer_about_nutrient(nutrient, body.message, history, comparison)
 
 
 @app.get("/api/nutrients/{nutrient_id}/foods", response_model=PaginatedFoodsSchema)

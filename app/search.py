@@ -39,7 +39,6 @@ def search_nutrient(db: Session, query: str) -> dict:
         close_matches = difflib.get_close_matches(q, candidates_lower, n=3, cutoff=0.6)
         seen_ids: set[int] = set()
         for match in close_matches:
-            # Find original candidate (may be a synonym)
             n = db.query(Nutrient).filter(Nutrient.name.ilike(match)).first()
             if not n:
                 syn = db.query(NutrientSynonym).filter(NutrientSynonym.synonym.ilike(match)).first()

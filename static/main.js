@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initShowMore();
   initRdaBars();
   initCardAnimations();
+  initChat();
 });
 
 /* ─── 0. Custom dot cursor + water ripple ───────────────────────────────── */
@@ -326,6 +327,140 @@ function _bouncePills() {
     pill.classList.add("pill-init");
     pill.style.animationDelay = `${i * 38}ms`;
   });
+}
+
+/* ─── 6. Per-nutrient floating chat ─────────────────────────────────────── */
+function initChat() {
+  const bubble = document.getElementById("chat-bubble");
+  if (!bubble) return; // not on a nutrient page
+
+  const panel      = document.getElementById("chat-panel");
+  const closeBtn   = document.getElementById("chat-close-btn");
+  const compareBtn = document.getElementById("chat-compare-btn");
+  const compareRow = document.getElementById("chat-compare-row");
+  const cmpInput   = document.getElementById("chat-compare-input");
+  const cmpList    = document.getElementById("chat-compare-list");
+  const msgArea    = document.getElementById("chat-messages");
+  const chatInput  = document.getElementById("chat-input");
+  const sendBtn    = document.getElementById("chat-send-btn");
+  const titleEl    = document.getElementById("chat-title");
+
+  const nutrientId   = parseInt(bubble.dataset.nutrientId, 10);
+  const nutrientName = bubble.dataset.nutrientName;
+  let history        = [];
+  let comparisonId   = null;
+  let comparisonName = null;
+  let cmpDebounce;
+
+  // ── Open / close ──────────────────────────────────────────────────────
+  bubble.addEventListener("click", () => {
+    panel.hidden = false;
+    bubble.hidden = true;
+    chatInput.focus();
+    if (!msgArea.children.length) {
+      _appendMsg("assistant",
+        `Hi! Ask me anything about <strong>${nutrientName}</strong> — food sources, ` +
+        `absorption, deficiency signs, RDA, and more.`
+      );
+    }
+  });
+
+  closeBtn.addEventListener("click", () => {
+    panel.hidden = true;
+    bubble.hidden = false;
+  });
+
+  // ── Compare picker ────────────────────────────────────────────────────
+  compareBtn.addEventListener("click", () => {
+    compareRow.hidden = !compareRow.hidden;
+    if (!compareRow.hidden) cmpInput.focus();
+  });
+
+  cmpInput.addEventListener("input", () => {
+    clearTimeout(cmpDebounce);
+    const q = cmpInput.value.trim();
+    if (q.length < 2) { cmpList.innerHTML = ""; cmpList.hidden = true; return; }
+    cmpDebounce = setTimeout(async () => {
+      const res  = await fetch(`/api/nutrients/suggest?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      cmpList.innerHTML = "";
+      if (!data.length) { cmpList.hidden = true; return; }
+      data.forEach((n, i) => {
+        const li = document.createElement("li");
+        li.textContent  = n.name;
+        li.role         = "option";
+        li.setAttribute("aria-selected", "false");
+        li.id           = `cmp-opt-${i}`;
+        li.addEventListener("click", () => {
+          comparisonId   = n.id;
+          comparisonName = n.name;
+          cmpInput.value = n.name;
+          cmpList.hidden = true;
+          compareRow.hidden = true;
+          titleEl.textContent = `💬 ${nutrientName} vs ${comparisonName}`;
+          _appendMsg("assistant",
+            `Now comparing <strong>${nutrientName}</strong> and <strong>${comparisonName}</strong>. Ask your question!`
+          );
+        });
+        cmpList.appendChild(li);
+      });
+      cmpList.hidden = false;
+    }, 200);
+  });
+
+  // ── Send message ──────────────────────────────────────────────────────
+  async function send() {
+    const q = chatInput.value.trim();
+    if (!q) return;
+    chatInput.value = "";
+    _appendMsg("user", q);
+    sendBtn.disabled    = true;
+    sendBtn.textContent = "…";
+
+    try {
+      const res = await fetch(`/api/chat/${nutrientId}`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          message:       q,
+          history:       history,
+          comparison_id: comparisonId,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        _appendMsg("error", err.detail || "Something went wrong. Please try again.");
+      } else {
+        const data = await res.json();
+        _appendMsg("assistant", data.answer);
+        history.push({ role: "user", content: q });
+        history.push({ role: "assistant", content: data.answer });
+        if (history.length > 8) history = history.slice(-8);
+      }
+    } catch {
+      _appendMsg("error", "Network error — could not reach the server.");
+    }
+
+    sendBtn.disabled    = false;
+    sendBtn.textContent = "Send";
+    chatInput.focus();
+  }
+
+  sendBtn.addEventListener("click", send);
+  chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+}
+
+function _appendMsg(role, html) {
+  const area = document.getElementById("chat-messages");
+  if (!area) return;
+  const div = document.createElement("div");
+  div.className = `chat-msg chat-msg--${role}`;
+  // Light markdown: **bold**, newlines
+  div.innerHTML = html
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
+  area.appendChild(div);
+  div.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────────── */

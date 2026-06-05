@@ -97,3 +97,14 @@ class SuggestItemSchema(BaseModel):
     id: int
     name: str
     category: str
+
+
+class ChatMessageSchema(BaseModel):
+    role: str      # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list[ChatMessageSchema] = []
+    comparison_id: int | None = None
