@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initCursor();
   initAutocomplete();
   initSearchValidation();
-  initShowMore();
   initRdaBars();
   initCardAnimations();
   initChat();
@@ -22,7 +21,7 @@ function initCursor() {
   });
 
   // Grow dot when hovering interactive elements
-  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill, .show-more-btn";
+  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill";
   document.addEventListener("mouseover", (e) => {
     if (e.target.closest(interactiveSelector)) {
       dot.classList.add("hovering");
@@ -49,9 +48,9 @@ function spawnRipple(x, y) {
   const sizes   = [60, 120, 200];
   const delays  = [0, 80, 180];
   const colors  = [
-    "rgba(194, 113, 79, 0.45)",   // terracotta
-    "rgba(74, 124, 89, 0.28)",    // olive
-    "rgba(194, 113, 79, 0.14)",   // faint terracotta
+    "rgba(42, 122, 75, 0.40)",
+    "rgba(82, 184, 120, 0.25)",
+    "rgba(42, 122, 75, 0.12)",
   ];
 
   sizes.forEach((size, i) => {
@@ -202,58 +201,36 @@ function initSearchValidation() {
   }
 }
 
-/* ─── 3. "Show more" foods ──────────────────────────────────────────────── */
-function initShowMore() {
-  const btn = document.getElementById("show-more-foods");
-  const list = document.getElementById("food-list");
-  if (!btn || !list) return;
+const FOOD_EMOJI_MAP = {
+  "liver":"🥩","beef":"🥩","lamb":"🥩","pork":"🥓","bacon":"🥓",
+  "chicken":"🍗","turkey":"🍗","salmon":"🐟","tuna":"🐟","sardine":"🐟",
+  "mackerel":"🐟","trout":"🐟","herring":"🐟","fish":"🐟","swordfish":"🐠",
+  "cod":"🐠","tilapia":"🐠","shrimp":"🦐","prawn":"🦐","oyster":"🦪",
+  "clam":"🦪","mussel":"🦪","crab":"🦞","lobster":"🦞","egg":"🥚",
+  "milk":"🥛","yogurt":"🥛","curd":"🥛","cheese":"🧀","paneer":"🧀",
+  "butter":"🧈","carrot":"🥕","sweet potato":"🍠","yam":"🍠",
+  "spinach":"🌿","kale":"🌿","chard":"🌿","broccoli":"🥦","cabbage":"🥦",
+  "tomato":"🍅","potato":"🥔","avocado":"🥑","banana":"🍌","plantain":"🍌",
+  "orange":"🍊","citrus":"🍊","lemon":"🍋","lime":"🍋","apple":"🍎",
+  "berry":"🫐","blueberry":"🫐","strawberry":"🍓","mango":"🥭",
+  "guava":"🍏","pineapple":"🍍","cantaloupe":"🍈","melon":"🍈",
+  "grape":"🍇","mushroom":"🍄","nuts":"🥜","peanut":"🥜","almond":"🌰",
+  "walnut":"🌰","cashew":"🌰","brazil":"🌰","seed":"🌱","flax":"🌱",
+  "chia":"🌱","sunflower":"🌻","oat":"🌾","wheat":"🌾","grain":"🌾",
+  "rye":"🌾","rice":"🍚","quinoa":"🍚","bread":"🍞","fortified":"🍞",
+  "bean":"🫘","lentil":"🫘","dal":"🫘","chickpea":"🫘","soy":"🫘",
+  "tofu":"🫘","tempeh":"🫘","seaweed":"🌊","nori":"🌊","kelp":"🌊",
+  "salt":"🧂","sugar":"🍬","oil":"🫙","olive":"🫒","chocolate":"🍫",
+  "cocoa":"🍫","coffee":"☕","juice":"🥤","moringa":"🌿","ragi":"🌾",
+  "bajra":"🌾","jowar":"🌾","coconut":"🥥"
+};
 
-  btn.addEventListener("click", async () => {
-    const nutrientId = btn.dataset.nutrientId;
-    const offset = parseInt(btn.dataset.offset, 10);
-    const originalText = btn.textContent;
-    btn.textContent = "Loading...";
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`/api/nutrients/${nutrientId}/foods?offset=${offset}&limit=10`);
-      const data = await res.json();
-      appendFoodCards(data.items, list);
-      const newOffset = offset + data.items.length;
-      btn.dataset.offset = newOffset;
-
-      if (data.items.length < 10 || newOffset >= data.total) {
-        btn.remove();
-      } else {
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }
-    } catch (_) {
-      btn.textContent = originalText;
-      btn.disabled = false;
-    }
-  });
-}
-
-function appendFoodCards(foods, list) {
-  foods.forEach((food, i) => {
-    const li = document.createElement("li");
-    li.className = "food-card";
-    li.style.animationDelay = `${i * 60}ms`;
-    li.innerHTML = `
-      <h4>${escHtml(food.food_name)}</h4>
-      <div class="food-amount">${food.amount} ${escHtml(food.unit)}</div>
-      <div class="food-serving">${escHtml(food.serving_size)}</div>
-      ${food.bioavailability_note ? `<div class="food-note">${escHtml(food.bioavailability_note)}</div>` : ""}
-      ${food.preparation_note ? `<div class="food-note">Prep: ${escHtml(food.preparation_note)}</div>` : ""}
-      <div class="food-source">
-        <a href="${escHtml(food.source.url)}" target="_blank" rel="noopener" class="source-link">
-          ${escHtml(food.source.name)}
-        </a>
-      </div>
-    `;
-    list.appendChild(li);
-  });
+function getFoodEmoji(foodName) {
+  const lower = foodName.toLowerCase();
+  for (const [k, v] of Object.entries(FOOD_EMOJI_MAP)) {
+    if (lower.includes(k)) return v;
+  }
+  return "🍽️";
 }
 
 /* ─── 4. RDA bar animation (Intersection Observer) ─────────────────────── */

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Nutrient Check — Search for Nutrients{% endblock %}
+{% block title %}NutriCheck — Search for Nutrients{% endblock %}
 
 {% block meta %}
 <meta name="description" content="Search for nutrients and discover which foods help you get them, how absorption works, and why your body needs them.">
@@ -8,51 +8,40 @@
 
 {% block content %}
 <section class="hero">
-  <div class="hero-emoji-bar">
-    <span class="float-emoji" style="animation-delay: 0s;">🍊</span>
-    <span class="float-emoji" style="animation-delay: 0.6s;">🥦</span>
-    <span class="float-emoji" style="animation-delay: 1.2s;">🥕</span>
-    <span class="float-emoji" style="animation-delay: 0.3s;">🫐</span>
-    <span class="float-emoji" style="animation-delay: 0.9s;">🥚</span>
+  <!-- Decorative shapes -->
+  <div class="deco deco--arrow-tl" aria-hidden="true"></div>
+  <div class="deco deco--arrow-br" aria-hidden="true"></div>
+  <div class="deco deco--pill-tr" aria-hidden="true">Vitamins</div>
+  <div class="deco deco--pill-bl" aria-hidden="true">Minerals</div>
+
+  <div class="hero-inner">
+    <h1 class="hero-title">Find what your<br><span class="hero-accent">body needs.</span></h1>
+    <p class="hero-subtitle">Search any nutrient — get food sources, absorption tips, and science-backed body benefits.</p>
+
+    <div class="search-wrapper">
+      <form id="search-form" class="search-form" action="/search" method="GET" role="search" autocomplete="off">
+        <input
+          id="nutrient-search"
+          class="search-input"
+          type="text"
+          name="nutrient"
+          placeholder="e.g. Iron, Vitamin C, Calcium…"
+          aria-label="Search for a nutrient"
+          role="combobox"
+          aria-expanded="false"
+          aria-autocomplete="list"
+          aria-controls="suggest-list"
+          aria-haspopup="listbox"
+          spellcheck="false"
+        >
+        <button id="search-btn" class="search-btn" type="submit" aria-label="Search">Search</button>
+      </form>
+
+      <ul id="suggest-list" class="autocomplete-dropdown" role="listbox" aria-label="Nutrient suggestions"></ul>
+      <span id="search-error" class="inline-error" role="alert" aria-live="polite"></span>
+    </div>
+
+    <p class="hero-trust-note">Data from NIH ODS · USDA · Harvard · Cleveland Clinic · Mayo Clinic</p>
   </div>
-
-  <h1 class="hero-title">What nutrient are you looking for?</h1>
-  <p class="hero-subtitle">Discover foods, absorption tips, and body benefits — all from trusted sources.</p>
-
-  <div class="search-wrapper">
-    <form id="search-form" class="search-form" action="/search" method="GET" role="search" autocomplete="off">
-      <input
-        id="nutrient-search"
-        class="search-input"
-        type="text"
-        name="nutrient"
-        placeholder="e.g. Iron, Vitamin C, Calcium…"
-        aria-label="Search for a nutrient"
-        role="combobox"
-        aria-expanded="false"
-        aria-autocomplete="list"
-        aria-controls="suggest-list"
-        aria-haspopup="listbox"
-        spellcheck="false"
-      >
-      <button id="search-btn" class="search-btn" type="submit" aria-label="Search">Search</button>
-    </form>
-
-    <ul id="suggest-list" class="autocomplete-dropdown" role="listbox" aria-label="Nutrient suggestions"></ul>
-    <span id="search-error" class="inline-error" role="alert" aria-live="polite"></span>
-  </div>
-
-  <!-- SVG wave divider -->
-  <div class="wave-divider" style="margin-top:3rem;">
-    <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#F5E6D3"/>
-    </svg>
-  </div>
-</section>
-
-<section style="background:#F5E6D3;padding:2rem;text-align:center;">
-  <p style="color:#7a5c4a;font-size:0.9rem;max-width:600px;margin:0 auto;">
-    Trusted data from NIH ODS, USDA, Harvard, Cleveland Clinic, and Mayo Clinic. Every fact is linked to its source.
-  </p>
 </section>
 {% endblock %}

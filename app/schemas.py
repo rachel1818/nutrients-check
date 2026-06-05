@@ -33,6 +33,7 @@ class NutrientFoodSourceSchema(BaseModel):
     unit: str
     bioavailability_note: str | None
     preparation_note: str | None
+    image_url: str | None
     source: SourceSchema
 
 
@@ -60,12 +61,20 @@ class NutrientBodyRoleSchema(BaseModel):
     source: SourceSchema
 
 
+class NutrientDeficiencyCravingSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    craving_type: str
+    explanation: str
+    source: SourceSchema
+
+
 class NutrientListItemSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
     category: str
     slug: str
+    image_url: str | None
 
 
 class NutrientDetailSchema(NutrientListItemSchema):
@@ -76,6 +85,7 @@ class NutrientDetailSchema(NutrientListItemSchema):
     absorption_helpers: list[NutrientAbsorptionHelperSchema]
     absorption_blockers: list[NutrientAbsorptionBlockerSchema]
     body_roles: list[NutrientBodyRoleSchema]
+    deficiency_cravings: list[NutrientDeficiencyCravingSchema]
 
 
 class PaginatedNutrientsSchema(BaseModel):

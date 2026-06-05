@@ -37,6 +37,7 @@ class Nutrient(Base):
     category: Mapped[str] = mapped_column(String(100), nullable=False)
     solubility: Mapped[str | None] = mapped_column(String(50), nullable=True)
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
@@ -59,6 +60,9 @@ class Nutrient(Base):
     )
     body_roles: Mapped[list["NutrientBodyRole"]] = relationship(
         "NutrientBodyRole", back_populates="nutrient", cascade="all, delete-orphan"
+    )
+    deficiency_cravings: Mapped[list["NutrientDeficiencyCraving"]] = relationship(
+        "NutrientDeficiencyCraving", back_populates="nutrient", cascade="all, delete-orphan"
     )
 
 
@@ -110,6 +114,7 @@ class NutrientFoodSource(Base):
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     bioavailability_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     preparation_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     source_id: Mapped[int] = mapped_column(Integer, ForeignKey("sources.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -171,6 +176,23 @@ class NutrientBodyRole(Base):
     )
 
     nutrient: Mapped["Nutrient"] = relationship("Nutrient", back_populates="body_roles")
+    source: Mapped["Source"] = relationship("Source")
+
+
+class NutrientDeficiencyCraving(Base):
+    __tablename__ = "nutrient_deficiency_cravings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nutrient_id: Mapped[int] = mapped_column(Integer, ForeignKey("nutrients.id"), nullable=False)
+    craving_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    explanation: Mapped[str] = mapped_column(Text, nullable=False)
+    source_id: Mapped[int] = mapped_column(Integer, ForeignKey("sources.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+    nutrient: Mapped["Nutrient"] = relationship("Nutrient", back_populates="deficiency_cravings")
     source: Mapped["Source"] = relationship("Source")
 
 

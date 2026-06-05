@@ -7,14 +7,17 @@
   {% block meta %}{% endblock %}
   <link rel="stylesheet" href="/static/style.css">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <header class="site-header">
     <nav class="site-nav">
-      <a href="/" class="site-logo">🌿 Nutrient Check</a>
-      <a href="/nutrients" class="btn-nav">All Nutrients</a>
+      <a href="/" class="site-logo">NutriCheck</a>
+      <div class="site-nav-links">
+        <a href="/nutrients" class="nav-link">Browse</a>
+        <a href="/nutrients" class="btn-nav">All Nutrients</a>
+      </div>
     </nav>
   </header>
 
@@ -26,12 +29,12 @@
     <p>Data sourced from
       <a href="https://ods.od.nih.gov/" target="_blank" rel="noopener">NIH ODS</a>,
       <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">USDA FoodData Central</a>,
-      <a href="https://www.hsph.harvard.edu/nutritionsource/" target="_blank" rel="noopener">Harvard T.H. Chan School of Public Health</a>,
+      <a href="https://www.hsph.harvard.edu/nutritionsource/" target="_blank" rel="noopener">Harvard T.H. Chan</a>,
       <a href="https://www.nin.res.in/" target="_blank" rel="noopener">NIN Hyderabad</a>,
       <a href="https://my.clevelandclinic.org/" target="_blank" rel="noopener">Cleveland Clinic</a>, and
       <a href="https://www.mayoclinic.org/" target="_blank" rel="noopener">Mayo Clinic</a>.
     </p>
-    <p style="margin-top:0.4rem;"><strong>This app is for educational purposes only and is not medical advice.</strong></p>
+    <p style="margin-top:0.4rem;opacity:0.7;">This app is for educational purposes only and is not medical advice.</p>
   </footer>
 
   <script src="/static/main.js"></script>

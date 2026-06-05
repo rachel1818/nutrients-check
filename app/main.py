@@ -18,16 +18,15 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.database import Base, engine, get_db
-from app.models import Nutrient, NutrientFoodSource, NutrientSynonym
-from app.chat import answer_about_nutrient
+from app.models import Nutrient, NutrientDeficiencyCraving, NutrientFoodSource, NutrientSynonym
 from app.schemas import (
-    ChatRequest,
     NutrientDetailSchema,
     PaginatedFoodsSchema,
     PaginatedNutrientsSchema,
     SuggestItemSchema,
 )
 from app.search import search_nutrient
+
 
 load_dotenv()
 
@@ -183,22 +182,6 @@ async def list_nutrients(offset: int = 0, limit: int = 50, db: Session = Depends
 
 
 
-@app.post("/api/chat/{nutrient_id}")
-async def nutrient_chat(
-    nutrient_id: int,
-    body: ChatRequest,
-    db: Session = Depends(get_db),
-):
-    nutrient = db.get(Nutrient, nutrient_id)
-    if not nutrient:
-        raise HTTPException(status_code=404, detail="Nutrient not found")
-    if not body.message.strip():
-        raise HTTPException(status_code=400, detail="message is required")
-    comparison = db.get(Nutrient, body.comparison_id) if body.comparison_id else None
-    history = [{"role": m.role, "content": m.content} for m in body.history]
-    return answer_about_nutrient(nutrient, body.message, history, comparison)
-
-
 @app.get("/api/nutrients/{nutrient_id}/foods", response_model=PaginatedFoodsSchema)
 async def get_nutrient_foods(
     nutrient_id: int, offset: int = 0, limit: int = 10, db: Session = Depends(get_db)
@@ -252,7 +235,6 @@ async def search_page(request: Request, nutrient: str = "", db: Session = Depend
             db.query(NutrientFoodSource)
             .filter(NutrientFoodSource.nutrient_id == n.id)
             .order_by(NutrientFoodSource.amount.desc())
-            .limit(10)
             .all()
         )
 
@@ -288,7 +270,6 @@ async def nutrient_detail(request: Request, nutrient_id: int, db: Session = Depe
         db.query(NutrientFoodSource)
         .filter(NutrientFoodSource.nutrient_id == nutrient_id)
         .order_by(NutrientFoodSource.amount.desc())
-        .limit(10)
         .all()
     )
 
