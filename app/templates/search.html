@@ -19,143 +19,249 @@
   </div>
 
   {% if nutrient %}
-  <!-- ── Emoji → nutrient mapping ─────────────────────────────────────── -->
+
+  {# ── emoji maps ──────────────────────────────────────────────────────── #}
   {% set emoji_map = {
-    "Vitamin A":              "🥕",
-    "Vitamin B1":             "🌾",
-    "Vitamin B2":             "🥛",
-    "Vitamin B3":             "🍗",
-    "Vitamin B5":             "🥑",
-    "Vitamin B6":             "🍌",
-    "Vitamin B7":             "🥚",
-    "Vitamin B9":             "🥬",
-    "Vitamin B12":            "🐟",
-    "Vitamin C":              "🍊",
-    "Vitamin D":              "☀️",
-    "Vitamin E":              "🌻",
-    "Vitamin K":              "🥦",
-    "Iron":                   "🥩",
-    "Calcium":                "🦴",
-    "Zinc":                   "🦪",
-    "Magnesium":              "🥜",
-    "Potassium":              "🍌",
-    "Phosphorus":             "🐠",
-    "Selenium":               "🌰",
-    "Iodine":                 "🌊",
-    "Copper":                 "🦞",
-    "Sodium":                 "🧂",
-    "Dietary Fiber":          "🌾",
-    "Added Sugar":            "🍬",
-    "Protein":                "💪",
-    "Omega-3 Fatty Acids":    "🐟",
-    "Omega-6 Fatty Acids":    "🌻",
-    "Omega-9 Fatty Acids":    "🫒"
+    "Vitamin A":           "🥕",
+    "Vitamin B1":          "🌾",
+    "Vitamin B2":          "🥛",
+    "Vitamin B3":          "🍗",
+    "Vitamin B5":          "🥑",
+    "Vitamin B6":          "🍌",
+    "Vitamin B7":          "🥚",
+    "Vitamin B9":          "🥬",
+    "Vitamin B12":         "🐟",
+    "Vitamin C":           "🍊",
+    "Vitamin D":           "☀️",
+    "Vitamin E":           "🌻",
+    "Vitamin K":           "🥦",
+    "Iron":                "🥩",
+    "Calcium":             "🦴",
+    "Zinc":                "🦪",
+    "Magnesium":           "🥜",
+    "Potassium":           "🍌",
+    "Phosphorus":          "🐠",
+    "Selenium":            "🌰",
+    "Iodine":              "🌊",
+    "Copper":              "🦞",
+    "Sodium":              "🧂",
+    "Dietary Fiber":       "🌾",
+    "Added Sugar":         "🍬",
+    "Protein":             "💪",
+    "Omega-3 Fatty Acids": "🐟",
+    "Omega-6 Fatty Acids": "🌻",
+    "Omega-9 Fatty Acids": "🫒"
   } %}
 
-  <!-- ── Found a nutrient ──────────────────────────────────────────────── -->
-  <div class="results-header">
-    <span class="nutrient-emoji-anchor" role="img" aria-hidden="true">
+  {% set food_emoji_map = {
+    "liver":       "🥩", "beef":        "🥩", "lamb":       "🥩", "venison":   "🥩",
+    "pork":        "🥓", "bacon":       "🥓",
+    "chicken":     "🍗", "turkey":      "🍗",
+    "salmon":      "🐟", "tuna":        "🐟", "sardine":    "🐟", "mackerel":  "🐟",
+    "trout":       "🐟", "herring":     "🐟", "anchovy":    "🐟", "fish":      "🐟",
+    "swordfish":   "🐠", "cod":         "🐠", "tilapia":    "🐠",
+    "shrimp":      "🦐", "prawn":       "🦐",
+    "oyster":      "🦪", "clam":        "🦪", "mussel":     "🦪",
+    "crab":        "🦞", "lobster":     "🦞",
+    "egg":         "🥚",
+    "milk":        "🥛", "yogurt":      "🥛", "curd":       "🥛",
+    "cheese":      "🧀", "paneer":      "🧀",
+    "butter":      "🧈",
+    "carrot":      "🥕",
+    "sweet potato":"🍠", "yam":         "🍠",
+    "spinach":     "🌿", "kale":        "🌿", "chard":      "🌿",
+    "broccoli":    "🥦", "cabbage":     "🥦",
+    "tomato":      "🍅",
+    "potato":      "🥔",
+    "avocado":     "🥑",
+    "banana":      "🍌", "plantain":    "🍌",
+    "orange":      "🍊", "citrus":      "🍊", "lemon":      "🍋", "lime":      "🍋",
+    "apple":       "🍎",
+    "berry":       "🫐", "blueberry":   "🫐", "strawberry": "🍓",
+    "mango":       "🥭",
+    "guava":       "🍏",
+    "pineapple":   "🍍",
+    "cantaloupe":  "🍈", "melon":       "🍈",
+    "grape":       "🍇",
+    "mushroom":    "🍄",
+    "nuts":        "🥜", "peanut":      "🥜", "almond":     "🌰", "walnut":    "🌰",
+    "cashew":      "🌰", "pistachio":   "🌰", "brazil":     "🌰",
+    "seed":        "🌱", "flax":        "🌱", "chia":       "🌱",
+    "sunflower":   "🌻",
+    "oat":         "🌾", "wheat":       "🌾", "grain":      "🌾", "rye":       "🌾",
+    "rice":        "🍚", "quinoa":      "🍚",
+    "bread":       "🍞", "fortified":   "🍞",
+    "bean":        "🫘", "lentil":      "🫘", "dal":        "🫘", "chickpea":  "🫘",
+    "soy":         "🫘", "tofu":        "🫘", "tempeh":     "🫘",
+    "seaweed":     "🌊", "nori":        "🌊", "kelp":       "🌊",
+    "salt":        "🧂",
+    "sugar":       "🍬",
+    "oil":         "🫙",
+    "olive":       "🫒",
+    "chocolate":   "🍫", "cocoa":       "🍫",
+    "coffee":      "☕",
+    "juice":       "🥤",
+    "moringa":     "🌿", "amaranth":    "🌿",
+    "ragi":        "🌾", "bajra":       "🌾", "jowar":      "🌾",
+    "coconut":     "🥥"
+  } %}
+
+  {# ── Nutrient hero ─────────────────────────────────────────────────── #}
+  <div class="nutrient-hero">
+    <span class="nutrient-hero-emoji" role="img" aria-hidden="true">
       {{ emoji_map.get(nutrient.name, "🌿") }}
     </span>
-    <h1>{{ nutrient.name }}</h1>
-    {% if nutrient.synonyms %}
-    <p style="color:#7a5c4a;font-size:0.9rem;margin-top:0.3rem;">
-      Also known as: {{ nutrient.synonyms | map(attribute='synonym') | join(', ') }}
-    </p>
-    {% endif %}
+    <div class="nutrient-hero-text">
+      <span class="category-badge">{{ nutrient.category }}</span>
+      <h1>{{ nutrient.name }}</h1>
+      {% if nutrient.synonyms %}
+      <p class="synonyms">Also known as: {{ nutrient.synonyms | map(attribute='synonym') | join(', ') }}</p>
+      {% endif %}
+    </div>
   </div>
 
   <div class="results-grid">
 
-    <!-- ── Left: Food Sources ───────────────────────────────────────────── -->
+    <!-- ── Left: Food Sources ────────────────────────────────────────── -->
     <div class="results-column">
       <div class="column-title">🥩 Foods That Provide This Nutrient</div>
 
       {% if top_foods %}
       <ul class="food-list" id="food-list">
         {% for food in top_foods %}
+
+        {# Pick food emoji by scanning food name against keyword map #}
+        {% set ns = namespace(fmoji="🍽️") %}
+        {% for keyword, emoji in food_emoji_map.items() %}
+          {% if keyword.lower() in food.food_name.lower() %}
+            {% set ns.fmoji = emoji %}
+          {% endif %}
+        {% endfor %}
+
         <li class="food-card">
-          <h4>{{ food.food_name }}</h4>
-          <div class="food-amount">{{ food.amount }} {{ food.unit }}</div>
-          <div class="food-serving">Per {{ food.serving_size }}</div>
-          {% if food.bioavailability_note %}
-          <div class="food-note">{{ food.bioavailability_note }}</div>
-          {% endif %}
-          {% if food.preparation_note %}
-          <div class="food-note">Prep tip: {{ food.preparation_note }}</div>
-          {% endif %}
-          <div class="food-source">
-            <a href="{{ food.source.url }}" target="_blank" rel="noopener" class="source-link">
-              [{{ food.source.name }}]
-            </a>
+          <div class="food-card-emoji" aria-hidden="true">{{ ns.fmoji }}</div>
+          <div class="food-card-body">
+            <h4>{{ food.food_name }}</h4>
+            <div class="food-amount">{{ food.amount }} {{ food.unit }}</div>
+            <div class="food-serving">Per {{ food.serving_size }}</div>
+            {% if food.bioavailability_note %}
+            <div class="food-note">{{ food.bioavailability_note }}</div>
+            {% endif %}
+            {% if food.preparation_note %}
+            <div class="food-note">Prep tip: {{ food.preparation_note }}</div>
+            {% endif %}
+            <div class="food-source">
+              {% if food.source.name == "USDA FoodData Central" %}
+              <a href="https://fdc.nal.usda.gov/food-search?query={{ food.food_name | urlencode }}" target="_blank" rel="noopener" class="source-link">
+                USDA FoodData Central ↗
+              </a>
+              {% else %}
+              <a href="{{ food.source.url }}" target="_blank" rel="noopener" class="source-link">
+                {{ food.source.name }} ↗
+              </a>
+              {% endif %}
+            </div>
           </div>
         </li>
         {% endfor %}
       </ul>
-
-      {% if total_foods > 10 %}
-      <button
-        id="show-more-foods"
-        class="show-more-btn"
-        data-nutrient-id="{{ nutrient.id }}"
-        data-offset="10"
-        aria-label="Load more food sources"
-      >Show more ({{ total_foods - 10 }} remaining)</button>
-      {% endif %}
 
       {% else %}
       <p class="placeholder-msg">No food source data available yet for this nutrient.</p>
       {% endif %}
     </div>
 
-    <!-- ── Middle: Absorption ───────────────────────────────────────────── -->
-    <div class="results-column">
-      <div class="column-title">⬆️ What Improves Absorption</div>
+    <!-- ── Middle: Absorption ─────────────────────────────────────────── -->
+    <div class="absorption-stack">
 
-      {% if nutrient.absorption_helpers %}
-      <ul class="absorption-list">
-        {% for helper in nutrient.absorption_helpers %}
-        <li class="absorption-card">
-          <h4>{{ helper.helper_name }}
-            <span style="font-size:0.75rem;font-weight:400;color:#7a5c4a;">({{ helper.helper_type }})</span>
-          </h4>
-          <p>{{ helper.description }}</p>
-          <div class="absorption-source">
-            <a href="{{ helper.source.url }}" target="_blank" rel="noopener" class="source-link">
-              [{{ helper.source.name }}]
-            </a>
+      <div class="results-column">
+        <button class="absorption-toggle" id="absorption-helpers-toggle"
+                aria-expanded="false" aria-controls="absorption-helpers-content">
+          ⬆️ What Improves Absorption
+          <span class="absorption-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="absorption-content" id="absorption-helpers-content" hidden>
+          {% if nutrient.absorption_helpers %}
+          <ul class="absorption-list">
+            {% for helper in nutrient.absorption_helpers %}
+            <li class="absorption-card">
+              <h4>{{ helper.helper_name }}
+                <span style="font-size:0.73rem;font-weight:400;color:var(--text-muted);">({{ helper.helper_type }})</span>
+              </h4>
+              <p>{{ helper.description }}</p>
+              <div class="absorption-source">
+                <a href="{{ helper.source.url }}" target="_blank" rel="noopener" class="source-link">
+                  {{ helper.source.name }} ↗
+                </a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="placeholder-msg">No absorption helper data available yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="results-column">
+        <button class="absorption-toggle absorption-toggle--blocker" id="absorption-blockers-toggle"
+                aria-expanded="false" aria-controls="absorption-blockers-content">
+          ⬇️ What Reduces Absorption
+          <span class="absorption-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="absorption-content" id="absorption-blockers-content" hidden>
+          {% if nutrient.absorption_blockers %}
+          <ul class="absorption-list">
+            {% for blocker in nutrient.absorption_blockers %}
+            <li class="absorption-card blocker">
+              <h4>{{ blocker.blocker_name }}
+                <span style="font-size:0.73rem;font-weight:400;color:var(--text-muted);">({{ blocker.blocker_type }})</span>
+              </h4>
+              <p>{{ blocker.description }}</p>
+              <div class="absorption-source">
+                <a href="{{ blocker.source.url }}" target="_blank" rel="noopener" class="source-link">
+                  {{ blocker.source.name }} ↗
+                </a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="placeholder-msg">No absorption blocker data available yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if nutrient.deficiency_cravings %}
+      <div class="results-column">
+        <button class="absorption-toggle cravings-toggle" id="cravings-toggle"
+                aria-expanded="false" aria-controls="cravings-content">
+          🧠 Check Cravings!
+          <span class="absorption-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="absorption-content cravings-content" id="cravings-content" hidden>
+          <p class="cravings-subtitle">When {{ nutrient.name | lower }} is depleted, the body may signal deficiency through unusual food cravings or appetite changes.</p>
+          <div class="cravings-list">
+            {% for craving in nutrient.deficiency_cravings %}
+            <div class="craving-card">
+              <div class="craving-type-badge">{{ craving.craving_type }}</div>
+              <p class="craving-explanation">{{ craving.explanation }}</p>
+              <div class="craving-source">
+                <a href="{{ craving.source.url }}" target="_blank" rel="noopener" class="source-link">
+                  {{ craving.source.name }} ↗
+                </a>
+              </div>
+            </div>
+            {% endfor %}
           </div>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="placeholder-msg">No absorption helper data available yet for this nutrient.</p>
+          <p class="cravings-disclaimer">⚠️ Cravings alone are not a reliable diagnostic tool. Consult a healthcare professional for deficiency testing.</p>
+        </div>
+      </div>
       {% endif %}
 
-      <div class="section-divider">⬇️ What Reduces Absorption</div>
+    </div><!-- /absorption-stack -->
 
-      {% if nutrient.absorption_blockers %}
-      <ul class="absorption-list">
-        {% for blocker in nutrient.absorption_blockers %}
-        <li class="absorption-card blocker">
-          <h4>{{ blocker.blocker_name }}
-            <span style="font-size:0.75rem;font-weight:400;color:#7a5c4a;">({{ blocker.blocker_type }})</span>
-          </h4>
-          <p>{{ blocker.description }}</p>
-          <div class="absorption-source">
-            <a href="{{ blocker.source.url }}" target="_blank" rel="noopener" class="source-link">
-              [{{ blocker.source.name }}]
-            </a>
-          </div>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="placeholder-msg">No absorption blocker data available yet for this nutrient.</p>
-      {% endif %}
-    </div>
-
-    <!-- ── Right: Role in Body + RDA ───────────────────────────────────── -->
+    <!-- ── Right: Body Roles + RDA ────────────────────────────────────── -->
     <div class="results-column">
       <div class="column-title">🫀 Role in the Body</div>
 
@@ -167,29 +273,24 @@
         {% if role.deficiency_signs %}
         <div class="deficiency-signs">⚠️ Deficiency signs: {{ role.deficiency_signs }}</div>
         {% endif %}
-        <div class="food-source" style="margin-top:0.4rem;">
+        <div class="food-source" style="margin-top:0.35rem;">
           <a href="{{ role.source.url }}" target="_blank" rel="noopener" class="source-link">
-            [{{ role.source.name }}]
+            {{ role.source.name }} ↗
           </a>
         </div>
       </div>
       {% endfor %}
       {% else %}
-      <p class="placeholder-msg">No body role data available yet for this nutrient.</p>
+      <p class="placeholder-msg">No body role data available yet.</p>
       {% endif %}
 
-      <!-- RDA Table -->
       {% if nutrient.rda_values %}
       <div class="rda-section">
         <div class="rda-table-title">Recommended Daily Allowance (RDA / AI)</div>
         <table class="rda-table" aria-label="RDA values for {{ nutrient.name }}">
           <thead>
             <tr>
-              <th>Age Group</th>
-              <th>Sex</th>
-              <th>Amount</th>
-              <th>Type</th>
-              <th>UL</th>
+              <th>Age Group</th><th>Sex</th><th>Amount</th><th>Type</th><th>UL</th>
               <th class="rda-bar-cell"></th>
             </tr>
           </thead>
@@ -212,13 +313,11 @@
             {% endfor %}
           </tbody>
         </table>
-        {% if nutrient.rda_values %}
         <div class="food-source" style="margin-top:0.5rem;">
           <a href="{{ nutrient.rda_values[0].source.url }}" target="_blank" rel="noopener" class="source-link">
-            [{{ nutrient.rda_values[0].source.name }}]
+            {{ nutrient.rda_values[0].source.name }} ↗
           </a>
         </div>
-        {% endif %}
       </div>
       {% endif %}
     </div>
@@ -226,7 +325,6 @@
   </div><!-- /results-grid -->
 
   {% elif suggestions %}
-  <!-- ── Fuzzy suggestions ─────────────────────────────────────────────── -->
   <div class="not-found-section">
     <h2>No results for "{{ query }}"</h2>
     <p>Did you mean one of these?</p>
@@ -239,15 +337,17 @@
   </div>
 
   {% elif query %}
-  <!-- ── Not found, no suggestions ────────────────────────────────────── -->
   <div class="not-found-section">
     <h2>No results for "{{ query }}"</h2>
-    <p>We couldn't find that nutrient. Try searching for something like <a href="/search?nutrient=Vitamin+C">Vitamin C</a>, <a href="/search?nutrient=Iron">Iron</a>, or <a href="/search?nutrient=Calcium">Calcium</a>.</p>
+    <p>Try searching for
+      <a href="/search?nutrient=Vitamin+C">Vitamin C</a>,
+      <a href="/search?nutrient=Iron">Iron</a>, or
+      <a href="/search?nutrient=Calcium">Calcium</a>.
+    </p>
     <p style="margin-top:1rem;"><a href="/nutrients">Browse all nutrients →</a></p>
   </div>
 
   {% else %}
-  <!-- ── No query ──────────────────────────────────────────────────────── -->
   <div class="not-found-section">
     <h2>Enter a nutrient to search</h2>
     <p><a href="/">← Back to home</a></p>

@@ -3,9 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initCursor();
   initAutocomplete();
   initSearchValidation();
-  initShowMore();
   initRdaBars();
   initCardAnimations();
+  initCollapsibleToggles();
+  initChat();
 });
 
 /* ─── 0. Custom dot cursor + water ripple ───────────────────────────────── */
@@ -21,7 +22,7 @@ function initCursor() {
   });
 
   // Grow dot when hovering interactive elements
-  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill, .show-more-btn";
+  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill, .cravings-toggle, .absorption-toggle";
   document.addEventListener("mouseover", (e) => {
     if (e.target.closest(interactiveSelector)) {
       dot.classList.add("hovering");
@@ -48,9 +49,9 @@ function spawnRipple(x, y) {
   const sizes   = [60, 120, 200];
   const delays  = [0, 80, 180];
   const colors  = [
-    "rgba(194, 113, 79, 0.45)",   // terracotta
-    "rgba(74, 124, 89, 0.28)",    // olive
-    "rgba(194, 113, 79, 0.14)",   // faint terracotta
+    "rgba(42, 122, 75, 0.40)",
+    "rgba(82, 184, 120, 0.25)",
+    "rgba(42, 122, 75, 0.12)",
   ];
 
   sizes.forEach((size, i) => {
@@ -201,58 +202,36 @@ function initSearchValidation() {
   }
 }
 
-/* ─── 3. "Show more" foods ──────────────────────────────────────────────── */
-function initShowMore() {
-  const btn = document.getElementById("show-more-foods");
-  const list = document.getElementById("food-list");
-  if (!btn || !list) return;
+const FOOD_EMOJI_MAP = {
+  "liver":"🥩","beef":"🥩","lamb":"🥩","pork":"🥓","bacon":"🥓",
+  "chicken":"🍗","turkey":"🍗","salmon":"🐟","tuna":"🐟","sardine":"🐟",
+  "mackerel":"🐟","trout":"🐟","herring":"🐟","fish":"🐟","swordfish":"🐠",
+  "cod":"🐠","tilapia":"🐠","shrimp":"🦐","prawn":"🦐","oyster":"🦪",
+  "clam":"🦪","mussel":"🦪","crab":"🦞","lobster":"🦞","egg":"🥚",
+  "milk":"🥛","yogurt":"🥛","curd":"🥛","cheese":"🧀","paneer":"🧀",
+  "butter":"🧈","carrot":"🥕","sweet potato":"🍠","yam":"🍠",
+  "spinach":"🌿","kale":"🌿","chard":"🌿","broccoli":"🥦","cabbage":"🥦",
+  "tomato":"🍅","potato":"🥔","avocado":"🥑","banana":"🍌","plantain":"🍌",
+  "orange":"🍊","citrus":"🍊","lemon":"🍋","lime":"🍋","apple":"🍎",
+  "berry":"🫐","blueberry":"🫐","strawberry":"🍓","mango":"🥭",
+  "guava":"🍏","pineapple":"🍍","cantaloupe":"🍈","melon":"🍈",
+  "grape":"🍇","mushroom":"🍄","nuts":"🥜","peanut":"🥜","almond":"🌰",
+  "walnut":"🌰","cashew":"🌰","brazil":"🌰","seed":"🌱","flax":"🌱",
+  "chia":"🌱","sunflower":"🌻","oat":"🌾","wheat":"🌾","grain":"🌾",
+  "rye":"🌾","rice":"🍚","quinoa":"🍚","bread":"🍞","fortified":"🍞",
+  "bean":"🫘","lentil":"🫘","dal":"🫘","chickpea":"🫘","soy":"🫘",
+  "tofu":"🫘","tempeh":"🫘","seaweed":"🌊","nori":"🌊","kelp":"🌊",
+  "salt":"🧂","sugar":"🍬","oil":"🫙","olive":"🫒","chocolate":"🍫",
+  "cocoa":"🍫","coffee":"☕","juice":"🥤","moringa":"🌿","ragi":"🌾",
+  "bajra":"🌾","jowar":"🌾","coconut":"🥥"
+};
 
-  btn.addEventListener("click", async () => {
-    const nutrientId = btn.dataset.nutrientId;
-    const offset = parseInt(btn.dataset.offset, 10);
-    const originalText = btn.textContent;
-    btn.textContent = "Loading...";
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`/api/nutrients/${nutrientId}/foods?offset=${offset}&limit=10`);
-      const data = await res.json();
-      appendFoodCards(data.items, list);
-      const newOffset = offset + data.items.length;
-      btn.dataset.offset = newOffset;
-
-      if (data.items.length < 10 || newOffset >= data.total) {
-        btn.remove();
-      } else {
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }
-    } catch (_) {
-      btn.textContent = originalText;
-      btn.disabled = false;
-    }
-  });
-}
-
-function appendFoodCards(foods, list) {
-  foods.forEach((food, i) => {
-    const li = document.createElement("li");
-    li.className = "food-card";
-    li.style.animationDelay = `${i * 60}ms`;
-    li.innerHTML = `
-      <h4>${escHtml(food.food_name)}</h4>
-      <div class="food-amount">${food.amount} ${escHtml(food.unit)}</div>
-      <div class="food-serving">${escHtml(food.serving_size)}</div>
-      ${food.bioavailability_note ? `<div class="food-note">${escHtml(food.bioavailability_note)}</div>` : ""}
-      ${food.preparation_note ? `<div class="food-note">Prep: ${escHtml(food.preparation_note)}</div>` : ""}
-      <div class="food-source">
-        <a href="${escHtml(food.source.url)}" target="_blank" rel="noopener" class="source-link">
-          ${escHtml(food.source.name)}
-        </a>
-      </div>
-    `;
-    list.appendChild(li);
-  });
+function getFoodEmoji(foodName) {
+  const lower = foodName.toLowerCase();
+  for (const [k, v] of Object.entries(FOOD_EMOJI_MAP)) {
+    if (lower.includes(k)) return v;
+  }
+  return "🍽️";
 }
 
 /* ─── 4. RDA bar animation (Intersection Observer) ─────────────────────── */
@@ -277,6 +256,7 @@ function initCardAnimations() {
   _slideFoodCards();
   _fadeColumns();
   _bouncePills();
+  _glowCravingsDisclaimer();
 }
 
 /* Food cards slide in from the left, staggered 80 ms apart */
@@ -318,6 +298,25 @@ function _fadeColumns() {
   cols.forEach(col => observer.observe(col));
 }
 
+/* Cravings disclaimer glows once, only when it's actually scrolled into view
+   (it starts inside a collapsed panel, so this fires the first time the user
+   opens the section AND it's visible on screen — not just on click). */
+function _glowCravingsDisclaimer() {
+  const el = document.querySelector(".cravings-disclaimer");
+  if (!el || !window.IntersectionObserver) {
+    if (el) el.classList.add("glow-once");
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("glow-once");
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.5 });
+  observer.observe(el);
+}
+
 /* Category pills bounce in with staggered delay on the All Nutrients page */
 function _bouncePills() {
   const pills = document.querySelectorAll(".category-pill");
@@ -326,6 +325,153 @@ function _bouncePills() {
     pill.classList.add("pill-init");
     pill.style.animationDelay = `${i * 38}ms`;
   });
+}
+
+/* ─── 6. Collapsible toggles (cravings, absorption helpers/blockers) ────── */
+function initCollapsibleToggles() {
+  document.querySelectorAll(".cravings-toggle, .absorption-toggle").forEach((btn) => {
+    const content = document.getElementById(btn.getAttribute("aria-controls"));
+    if (!content) return;
+    btn.addEventListener("click", () => {
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!expanded));
+      content.hidden = expanded;
+    });
+  });
+}
+
+/* ─── 7. Per-nutrient floating chat ─────────────────────────────────────── */
+function initChat() {
+  const bubble = document.getElementById("chat-bubble");
+  if (!bubble) return; // not on a nutrient page
+
+  const panel      = document.getElementById("chat-panel");
+  const closeBtn   = document.getElementById("chat-close-btn");
+  const compareBtn = document.getElementById("chat-compare-btn");
+  const compareRow = document.getElementById("chat-compare-row");
+  const cmpInput   = document.getElementById("chat-compare-input");
+  const cmpList    = document.getElementById("chat-compare-list");
+  const msgArea    = document.getElementById("chat-messages");
+  const chatInput  = document.getElementById("chat-input");
+  const sendBtn    = document.getElementById("chat-send-btn");
+  const titleEl    = document.getElementById("chat-title");
+
+  const nutrientId   = parseInt(bubble.dataset.nutrientId, 10);
+  const nutrientName = bubble.dataset.nutrientName;
+  let history        = [];
+  let comparisonId   = null;
+  let comparisonName = null;
+  let cmpDebounce;
+
+  // ── Open / close ──────────────────────────────────────────────────────
+  bubble.addEventListener("click", () => {
+    panel.hidden = false;
+    bubble.hidden = true;
+    chatInput.focus();
+    if (!msgArea.children.length) {
+      _appendMsg("assistant",
+        `Hi! Ask me anything about <strong>${nutrientName}</strong> — food sources, ` +
+        `absorption, deficiency signs, RDA, and more.`
+      );
+    }
+  });
+
+  closeBtn.addEventListener("click", () => {
+    panel.hidden = true;
+    bubble.hidden = false;
+  });
+
+  // ── Compare picker ────────────────────────────────────────────────────
+  compareBtn.addEventListener("click", () => {
+    compareRow.hidden = !compareRow.hidden;
+    if (!compareRow.hidden) cmpInput.focus();
+  });
+
+  cmpInput.addEventListener("input", () => {
+    clearTimeout(cmpDebounce);
+    const q = cmpInput.value.trim();
+    if (q.length < 2) { cmpList.innerHTML = ""; cmpList.hidden = true; return; }
+    cmpDebounce = setTimeout(async () => {
+      const res  = await fetch(`/api/nutrients/suggest?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      cmpList.innerHTML = "";
+      if (!data.length) { cmpList.hidden = true; return; }
+      data.forEach((n, i) => {
+        const li = document.createElement("li");
+        li.textContent  = n.name;
+        li.role         = "option";
+        li.setAttribute("aria-selected", "false");
+        li.id           = `cmp-opt-${i}`;
+        li.addEventListener("click", () => {
+          comparisonId   = n.id;
+          comparisonName = n.name;
+          cmpInput.value = n.name;
+          cmpList.hidden = true;
+          compareRow.hidden = true;
+          titleEl.textContent = `💬 ${nutrientName} vs ${comparisonName}`;
+          _appendMsg("assistant",
+            `Now comparing <strong>${nutrientName}</strong> and <strong>${comparisonName}</strong>. Ask your question!`
+          );
+        });
+        cmpList.appendChild(li);
+      });
+      cmpList.hidden = false;
+    }, 200);
+  });
+
+  // ── Send message ──────────────────────────────────────────────────────
+  async function send() {
+    const q = chatInput.value.trim();
+    if (!q) return;
+    chatInput.value = "";
+    _appendMsg("user", q);
+    sendBtn.disabled    = true;
+    sendBtn.textContent = "…";
+
+    try {
+      const res = await fetch(`/api/chat/${nutrientId}`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          message:       q,
+          history:       history,
+          comparison_id: comparisonId,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        _appendMsg("error", err.detail || "Something went wrong. Please try again.");
+      } else {
+        const data = await res.json();
+        _appendMsg("assistant", data.answer);
+        history.push({ role: "user", content: q });
+        history.push({ role: "assistant", content: data.answer });
+        if (history.length > 8) history = history.slice(-8);
+      }
+    } catch {
+      _appendMsg("error", "Network error — could not reach the server.");
+    }
+
+    sendBtn.disabled    = false;
+    sendBtn.textContent = "Send";
+    chatInput.focus();
+  }
+
+  sendBtn.addEventListener("click", send);
+  chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+}
+
+function _appendMsg(role, html) {
+  const area = document.getElementById("chat-messages");
+  if (!area) return;
+  const div = document.createElement("div");
+  div.className = `chat-msg chat-msg--${role}`;
+  // Light markdown: **bold**, newlines
+  div.innerHTML = html
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
+  area.appendChild(div);
+  div.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────────── */

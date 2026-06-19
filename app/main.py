@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.database import Base, engine, get_db
-from app.models import Nutrient, NutrientFoodSource, NutrientSynonym
+from app.models import Nutrient, NutrientDeficiencyCraving, NutrientFoodSource, NutrientSynonym
 from app.schemas import (
     NutrientDetailSchema,
     PaginatedFoodsSchema,
@@ -26,6 +26,7 @@ from app.schemas import (
     SuggestItemSchema,
 )
 from app.search import search_nutrient
+
 
 load_dotenv()
 
@@ -87,8 +88,16 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "..", "static")), name="static")
+STATIC_DIR = os.path.join(BASE_DIR, "..", "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+# Cache-busting query string for static assets: changes whenever main.js or
+# style.css is edited, so browsers fetch the new file instead of a stale cache.
+templates.env.globals["asset_version"] = int(max(
+    os.path.getmtime(os.path.join(STATIC_DIR, "main.js")),
+    os.path.getmtime(os.path.join(STATIC_DIR, "style.css")),
+))
 
 
 # ─── Custom error handlers ───────────────────────────────────────────────────
@@ -180,6 +189,7 @@ async def list_nutrients(offset: int = 0, limit: int = 50, db: Session = Depends
     return {"items": items, "total": total, "offset": offset, "limit": limit}
 
 
+
 @app.get("/api/nutrients/{nutrient_id}/foods", response_model=PaginatedFoodsSchema)
 async def get_nutrient_foods(
     nutrient_id: int, offset: int = 0, limit: int = 10, db: Session = Depends(get_db)
@@ -233,7 +243,6 @@ async def search_page(request: Request, nutrient: str = "", db: Session = Depend
             db.query(NutrientFoodSource)
             .filter(NutrientFoodSource.nutrient_id == n.id)
             .order_by(NutrientFoodSource.amount.desc())
-            .limit(10)
             .all()
         )
 
@@ -269,7 +278,6 @@ async def nutrient_detail(request: Request, nutrient_id: int, db: Session = Depe
         db.query(NutrientFoodSource)
         .filter(NutrientFoodSource.nutrient_id == nutrient_id)
         .order_by(NutrientFoodSource.amount.desc())
-        .limit(10)
         .all()
     )
 

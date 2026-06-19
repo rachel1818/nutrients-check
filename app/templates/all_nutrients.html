@@ -9,13 +9,45 @@
 {% block content %}
 <div class="all-nutrients-page">
   <h1>All Nutrients</h1>
-  <p style="color:#7a5c4a;margin-bottom:1rem;">Browse by category.</p>
+  <p>Browse by category.</p>
+
+  {% set emoji_map = {
+    "Vitamin A":           "🥕",
+    "Vitamin B1":          "🌾",
+    "Vitamin B2":          "🥛",
+    "Vitamin B3":          "🍗",
+    "Vitamin B5":          "🥑",
+    "Vitamin B6":          "🍌",
+    "Vitamin B7":          "🥚",
+    "Vitamin B9":          "🥬",
+    "Vitamin B12":         "🐟",
+    "Vitamin C":           "🍊",
+    "Vitamin D":           "☀️",
+    "Vitamin E":           "🌻",
+    "Vitamin K":           "🥦",
+    "Iron":                "🥩",
+    "Calcium":             "🦴",
+    "Zinc":                "🦪",
+    "Magnesium":           "🥜",
+    "Potassium":           "🍌",
+    "Phosphorus":          "🐠",
+    "Selenium":            "🌰",
+    "Iodine":              "🌊",
+    "Copper":              "🦞",
+    "Sodium":              "🧂",
+    "Dietary Fiber":       "🌾",
+    "Added Sugar":         "🍬",
+    "Protein":             "💪",
+    "Omega-3 Fatty Acids": "🐟",
+    "Omega-6 Fatty Acids": "🌻",
+    "Omega-9 Fatty Acids": "🫒"
+  } %}
 
   {% set category_labels = {
-    "Vitamins": "💊 Vitamins",
-    "Minerals": "🪨 Minerals",
+    "Vitamins":       "💊 Vitamins",
+    "Minerals":       "🪨 Minerals",
     "Macronutrients": "⚡ Macronutrients",
-    "Fatty Acids": "🐟 Fatty Acids"
+    "Fatty Acids":    "🐟 Fatty Acids"
   } %}
 
   {% for category, items in nutrients | groupby("category") %}
@@ -23,14 +55,17 @@
     <h2>{{ category_labels.get(category, category) }}</h2>
     <div class="nutrient-grid">
       {% for nutrient in items %}
-      <a href="/nutrients/{{ nutrient.id }}" class="category-pill">{{ nutrient.name }}</a>
+      <a href="/nutrients/{{ nutrient.id }}" class="category-pill">
+        <span class="pill-emoji">{{ emoji_map.get(nutrient.name, "🌿") }}</span>
+        {{ nutrient.name }}
+      </a>
       {% endfor %}
     </div>
   </div>
   {% endfor %}
 
   {% if not nutrients %}
-  <p class="placeholder-msg" style="margin-top:2rem;">No nutrients have been added yet. Run the seed script to populate the database.</p>
+  <p class="placeholder-msg" style="margin-top:2rem;">No nutrients yet. Run the seed script to populate the database.</p>
   {% endif %}
 </div>
 {% endblock %}

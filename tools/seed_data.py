@@ -17,6 +17,7 @@ from app.models import (
     NutrientAbsorptionBlocker,
     NutrientAbsorptionHelper,
     NutrientBodyRole,
+    NutrientDeficiencyCraving,
     NutrientFoodSource,
     NutrientRdaValue,
     NutrientSynonym,
@@ -743,6 +744,12 @@ def seed_all(db: Session) -> None:
 
     # ── Indian vegetables, grains, and pulses ────────────────────────────────
     _seed_indian_foods(db)
+
+    # ── Trace minerals, choline, and ferritin ────────────────────────────────
+    _seed_trace_and_choline(db)
+
+    # ── Deficiency cravings for all nutrients ────────────────────────────────
+    _seed_deficiency_cravings(db)
 
     db.commit()
     print(f"Seeded {db.query(Nutrient).count()} nutrients successfully.")
@@ -2766,7 +2773,751 @@ def _seed_indian_foods(db: Session) -> None:
     db.flush()
 
 
+# ─── URL constants for trace minerals and choline ────────────────────────────
+NIH_CHRO  = "https://ods.od.nih.gov/factsheets/Chromium-HealthProfessional/"
+NIH_MANG  = "https://ods.od.nih.gov/factsheets/Manganese-HealthProfessional/"
+NIH_FLUO  = "https://ods.od.nih.gov/factsheets/Fluoride-HealthProfessional/"
+NIH_MOL   = "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+NIH_CHOL  = "https://ods.od.nih.gov/factsheets/Choline-HealthProfessional/"
+NIH_FERR  = "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/"
+
+
+def _seed_trace_and_choline(db: Session) -> None:
+    """Seed Chromium, Manganese, Fluoride, Molybdenum, Choline, and Ferritin."""
+
+    # ── Chromium ──────────────────────────────────────────────────────────────
+    seed_nutrient(
+        db=db, name="Chromium", category="Minerals", solubility=None,
+        synonyms=["Cr", "chromium picolinate", "trivalent chromium", "chromium chloride",
+                  "chromium nicotinate", "GTF chromium", "glucose tolerance factor"],
+        food_sources=[
+            {"food_name": "Broccoli (cooked)", "serving_size": "1/2 cup (78g)",
+             "amount": 11, "unit": "mcg",
+             "bioavailability_note": "One of the richest plant sources of chromium.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+            {"food_name": "Grape Juice", "serving_size": "8 fl oz (240ml)",
+             "amount": 8, "unit": "mcg", "source_name": NIH, "source_url": NIH_CHRO},
+            {"food_name": "Whole Wheat English Muffin", "serving_size": "1 muffin (57g)",
+             "amount": 4, "unit": "mcg", "source_name": NIH, "source_url": NIH_CHRO},
+            {"food_name": "Potatoes (mashed)", "serving_size": "1 cup (210g)",
+             "amount": 3, "unit": "mcg", "source_name": NIH, "source_url": NIH_CHRO},
+            {"food_name": "Garlic (dried)", "serving_size": "1 oz (28g)",
+             "amount": 3, "unit": "mcg", "source_name": NIH, "source_url": NIH_CHRO},
+            {"food_name": "Turkey Breast (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 2, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Whole Wheat Bread", "serving_size": "1 slice (28g)",
+             "amount": 2, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Orange Juice", "serving_size": "8 fl oz (240ml)",
+             "amount": 2, "unit": "mcg", "source_name": NIH, "source_url": NIH_CHRO},
+            {"food_name": "Apple (unpeeled)", "serving_size": "1 medium (182g)",
+             "amount": 1, "unit": "mcg",
+             "bioavailability_note": "Chromium content in plant foods varies widely by soil chromium levels.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Green Beans (cooked)", "serving_size": "1/2 cup (62g)",
+             "amount": 1, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+        ],
+        helpers=[
+            {"helper_name": "Vitamin C", "helper_type": "nutrient",
+             "description": "Vitamin C (ascorbic acid) helps maintain chromium in the more bioavailable trivalent form (Cr³⁺) and has been shown to increase chromium absorption in some studies.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+            {"helper_name": "Niacin (Vitamin B3)", "helper_type": "nutrient",
+             "description": "Niacin is a structural component of glucose tolerance factor (GTF), the chromium complex that enhances insulin action. Adequate niacin helps chromium function at the cellular level.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+        ],
+        blockers=[
+            {"blocker_name": "Antacids (Calcium Carbonate)", "blocker_type": "medication",
+             "description": "Antacids that raise stomach pH can reduce chromium absorption, since an acidic environment aids chromium dissolution and uptake in the small intestine.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+            {"blocker_name": "High Refined Sugar Intake", "blocker_type": "food",
+             "description": "Diets high in simple sugars increase urinary chromium excretion, depleting body stores. This creates a cycle where chromium deficiency further impairs glucose metabolism.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+        ],
+        body_roles=[
+            {"body_system": "Insulin Signalling / Blood Sugar", "explanation": "Chromium potentiates the action of insulin by enhancing its binding to cell receptors. It is a cofactor for the chromodulin (low-molecular-weight chromium-binding substance), which activates the insulin receptor tyrosine kinase, facilitating glucose uptake into cells.",
+             "deficiency_signs": "Impaired glucose tolerance, elevated blood glucose and insulin levels, peripheral neuropathy. True deficiency is rare in healthy adults.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+            {"body_system": "Macronutrient Metabolism", "explanation": "Beyond glucose metabolism, chromium plays a role in the metabolism of lipids and proteins. Some studies suggest it modestly lowers LDL cholesterol and triglycerides, and may help maintain lean body mass.",
+             "source_name": NIH, "source_url": NIH_CHRO},
+        ],
+        rda_values=[
+            {"age_group": "19–50 years", "sex": "male", "value": 35, "unit": "mcg", "intake_type": "AI",
+             "upper_limit": None, "source_name": NIH, "source_url": NIH_CHRO},
+            {"age_group": "19–50 years", "sex": "female", "value": 25, "unit": "mcg", "intake_type": "AI",
+             "upper_limit": None, "source_name": NIH, "source_url": NIH_CHRO},
+            {"age_group": "51+ years", "sex": "male", "value": 30, "unit": "mcg", "intake_type": "AI",
+             "upper_limit": None, "source_name": NIH, "source_url": NIH_CHRO},
+            {"age_group": "51+ years", "sex": "female", "value": 20, "unit": "mcg", "intake_type": "AI",
+             "upper_limit": None, "source_name": NIH, "source_url": NIH_CHRO},
+            {"age_group": "Pregnancy (19+ years)", "sex": "pregnant", "value": 30, "unit": "mcg", "intake_type": "AI",
+             "upper_limit": None, "source_name": NIH, "source_url": NIH_CHRO},
+        ],
+    )
+
+    # ── Manganese ─────────────────────────────────────────────────────────────
+    seed_nutrient(
+        db=db, name="Manganese", category="Minerals", solubility=None,
+        synonyms=["Mn", "manganese sulfate", "manganese gluconate", "manganese chloride",
+                  "manganese citrate"],
+        food_sources=[
+            {"food_name": "Mussels (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 5.8, "unit": "mg",
+             "bioavailability_note": "Shellfish are among the richest dietary sources of manganese.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Hazelnuts (dry roasted)", "serving_size": "1 oz (28g)",
+             "amount": 1.7, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Pine Nuts", "serving_size": "1 oz (28g)",
+             "amount": 2.5, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Brown Rice (cooked)", "serving_size": "1 cup (195g)",
+             "amount": 1.8, "unit": "mg",
+             "bioavailability_note": "Whole grains retain manganese in the bran layer; refined grains lose most of it.",
+             "source_name": NIH, "source_url": NIH_MANG},
+            {"food_name": "Oatmeal (cooked)", "serving_size": "1 cup (234g)",
+             "amount": 1.4, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Pineapple (raw)", "serving_size": "1/2 cup chunks (83g)",
+             "amount": 0.8, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Chickpeas (cooked)", "serving_size": "1/2 cup (120g)",
+             "amount": 0.9, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Spinach (cooked)", "serving_size": "1/2 cup (90g)",
+             "amount": 0.8, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Black Tea (brewed)", "serving_size": "8 fl oz (240ml)",
+             "amount": 0.5, "unit": "mg",
+             "bioavailability_note": "Tea is a significant manganese source for regular tea drinkers.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Tofu (firm)", "serving_size": "1/2 cup (126g)",
+             "amount": 1.0, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Whole Wheat Bread", "serving_size": "1 slice (28g)",
+             "amount": 0.7, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+        ],
+        helpers=[
+            {"helper_name": "Low Iron Status", "helper_type": "nutrient",
+             "description": "Iron and manganese share intestinal transport mechanisms. When iron stores are low, the body upregulates divalent metal transport, increasing manganese absorption. Conversely, high iron supplementation can reduce manganese absorption.",
+             "source_name": NIH, "source_url": NIH_MANG},
+        ],
+        blockers=[
+            {"blocker_name": "High Iron Intake / Supplements", "blocker_type": "nutrient",
+             "description": "Iron competitively inhibits manganese absorption through shared DMT1 transporters in the intestine. Iron supplements taken with meals can significantly reduce manganese uptake.",
+             "source_name": NIH, "source_url": NIH_MANG},
+            {"blocker_name": "High Calcium Supplements", "blocker_type": "supplement",
+             "description": "Calcium supplements can inhibit manganese absorption when taken simultaneously. Take manganese-containing multivitamins and calcium supplements at different times of day.",
+             "source_name": NIH, "source_url": NIH_MANG},
+            {"blocker_name": "Phytic Acid (Phytate)", "blocker_type": "food",
+             "description": "Phytate in whole grains and legumes can form insoluble complexes with manganese, reducing its absorption. Soaking, sprouting, or fermenting reduces phytate content.",
+             "source_name": MAYO, "source_url": MAYO_GEN},
+        ],
+        body_roles=[
+            {"body_system": "Antioxidant Defence", "explanation": "Manganese is a structural component of manganese superoxide dismutase (MnSOD), a mitochondrial enzyme that neutralises superoxide free radicals generated during energy production. MnSOD is the primary antioxidant defence within mitochondria.",
+             "deficiency_signs": "Impaired bone formation, poor wound healing, impaired glucose metabolism, altered lipid metabolism. Manganese deficiency is rare in humans.",
+             "source_name": NIH, "source_url": NIH_MANG},
+            {"body_system": "Bone Formation and Cartilage", "explanation": "Manganese is required for the synthesis of proteoglycans — the structural molecules in cartilage and bone matrix. It also activates enzymes needed for bone mineralisation. Low manganese correlates with reduced bone density in some studies.",
+             "source_name": NIH, "source_url": NIH_MANG},
+            {"body_system": "Energy Metabolism", "explanation": "Manganese is a cofactor for pyruvate carboxylase (gluconeogenesis), arginase (urea cycle), and glutamine synthetase. These enzymes are critical for amino acid metabolism, blood sugar regulation, and ammonia detoxification.",
+             "source_name": NIH, "source_url": NIH_MANG},
+        ],
+        rda_values=[
+            {"age_group": "19+ years", "sex": "male", "value": 2.3, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 11, "source_name": NIH, "source_url": NIH_MANG},
+            {"age_group": "19+ years", "sex": "female", "value": 1.8, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 11, "source_name": NIH, "source_url": NIH_MANG},
+            {"age_group": "14–18 years", "sex": "male", "value": 2.2, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 9, "source_name": NIH, "source_url": NIH_MANG},
+            {"age_group": "14–18 years", "sex": "female", "value": 1.6, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 9, "source_name": NIH, "source_url": NIH_MANG},
+            {"age_group": "Pregnancy (19+ years)", "sex": "pregnant", "value": 2.0, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 11, "source_name": NIH, "source_url": NIH_MANG},
+        ],
+    )
+
+    # ── Fluoride ──────────────────────────────────────────────────────────────
+    seed_nutrient(
+        db=db, name="Fluoride", category="Minerals", solubility=None,
+        synonyms=["F", "fluorine", "sodium fluoride", "stannous fluoride",
+                  "fluoridated water", "calcium fluoride"],
+        food_sources=[
+            {"food_name": "Fluoridated Tap Water", "serving_size": "1 litre (1000ml)",
+             "amount": 0.7, "unit": "mg",
+             "bioavailability_note": "The primary dietary source of fluoride in countries with water fluoridation programs. Absorption is ~97% from water.",
+             "source_name": NIH, "source_url": NIH_FLUO},
+            {"food_name": "Black Tea (brewed)", "serving_size": "8 fl oz (240ml)",
+             "amount": 1.2, "unit": "mg",
+             "bioavailability_note": "Tea plants (Camellia sinensis) accumulate fluoride from soil. Black tea has the highest levels among beverages.",
+             "source_name": NIH, "source_url": NIH_FLUO},
+            {"food_name": "Green Tea (brewed)", "serving_size": "8 fl oz (240ml)",
+             "amount": 0.5, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Raisins (seedless)", "serving_size": "1.5 oz (42g)",
+             "amount": 0.2, "unit": "mg", "source_name": NIH, "source_url": NIH_FLUO},
+            {"food_name": "Shrimp (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 0.18, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Grape Juice", "serving_size": "8 fl oz (240ml)",
+             "amount": 0.22, "unit": "mg",
+             "bioavailability_note": "Grapes accumulate fluoride; juice concentrates this effect.",
+             "source_name": NIH, "source_url": NIH_FLUO},
+            {"food_name": "Potato (baked with skin)", "serving_size": "1 medium (213g)",
+             "amount": 0.11, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Cooked Spinach", "serving_size": "1/2 cup (90g)",
+             "amount": 0.15, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+        ],
+        helpers=[
+            {"helper_name": "Calcium (for fluorapatite formation)", "helper_type": "nutrient",
+             "description": "Adequate dietary calcium supports the formation of fluorapatite in bones and tooth enamel. Fluoride replaces hydroxyl groups in hydroxyapatite to form the more acid-resistant fluorapatite crystal structure.",
+             "source_name": NIH, "source_url": NIH_FLUO},
+        ],
+        blockers=[
+            {"blocker_name": "Calcium Supplements (taken simultaneously)", "blocker_type": "supplement",
+             "description": "High-dose calcium supplements taken at the same time as fluoride can form insoluble calcium fluoride, reducing fluoride absorption. Space them by at least 2 hours.",
+             "source_name": NIH, "source_url": NIH_FLUO},
+            {"blocker_name": "Magnesium Supplements", "blocker_type": "supplement",
+             "description": "Like calcium, magnesium can bind fluoride in the gut, forming insoluble magnesium fluoride and reducing absorption. Avoid taking large magnesium supplements with fluoride-containing foods.",
+             "source_name": MAYO, "source_url": MAYO_GEN},
+        ],
+        body_roles=[
+            {"body_system": "Dental Health", "explanation": "Fluoride is incorporated into tooth enamel during development, forming fluorapatite — a mineral that is significantly more resistant to acid attack from oral bacteria than natural hydroxyapatite. It remineralises early carious lesions and inhibits the bacterial enzymes that produce enamel-dissolving acids.",
+             "deficiency_signs": "Increased risk of dental caries (tooth decay), especially in childhood during tooth formation.",
+             "source_name": NIH, "source_url": NIH_FLUO},
+            {"body_system": "Bone Health", "explanation": "Fluoride is incorporated into bone mineral as fluorapatite, increasing bone crystal density and hardness. Adequate intake is associated with reduced fracture risk. However, excess fluoride (fluorosis) can make bones brittle.",
+             "deficiency_signs": "Dental caries. Skeletal fluorosis can result from chronically excessive intake (>10 mg/day from all sources).",
+             "source_name": NIH, "source_url": NIH_FLUO},
+        ],
+        rda_values=[
+            {"age_group": "19+ years", "sex": "male", "value": 4.0, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 10, "source_name": NIH, "source_url": NIH_FLUO},
+            {"age_group": "19+ years", "sex": "female", "value": 3.0, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 10, "source_name": NIH, "source_url": NIH_FLUO},
+            {"age_group": "14–18 years", "sex": "male", "value": 3.2, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 10, "source_name": NIH, "source_url": NIH_FLUO},
+            {"age_group": "14–18 years", "sex": "female", "value": 2.9, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 10, "source_name": NIH, "source_url": NIH_FLUO},
+            {"age_group": "4–8 years", "sex": "all", "value": 1.1, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 2.2, "source_name": NIH, "source_url": NIH_FLUO},
+        ],
+    )
+
+    # ── Molybdenum ────────────────────────────────────────────────────────────
+    seed_nutrient(
+        db=db, name="Molybdenum", category="Minerals", solubility=None,
+        synonyms=["Mo", "sodium molybdate", "ammonium molybdate"],
+        food_sources=[
+            {"food_name": "Black-eyed Peas (cooked)", "serving_size": "1/2 cup (86g)",
+             "amount": 196, "unit": "mcg",
+             "bioavailability_note": "Legumes are by far the richest dietary source of molybdenum.",
+             "source_name": NIH, "source_url": NIH_MOL},
+            {"food_name": "Beef Liver (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 138, "unit": "mcg", "source_name": NIH, "source_url": NIH_MOL},
+            {"food_name": "Lima Beans (cooked)", "serving_size": "1/2 cup (85g)",
+             "amount": 104, "unit": "mcg", "source_name": NIH, "source_url": NIH_MOL},
+            {"food_name": "Lentils (cooked)", "serving_size": "1/2 cup (99g)",
+             "amount": 74, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Split Peas (cooked)", "serving_size": "1/2 cup (98g)",
+             "amount": 70, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Green Peas (cooked)", "serving_size": "1/2 cup (80g)",
+             "amount": 31, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Whole Wheat Bread", "serving_size": "1 slice (28g)",
+             "amount": 12, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Almonds (dry roasted)", "serving_size": "1 oz (28g)",
+             "amount": 17, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Oats (cooked)", "serving_size": "1 cup (234g)",
+             "amount": 14, "unit": "mcg", "source_name": USDA, "source_url": USDA_URL},
+        ],
+        helpers=[
+            {"helper_name": "Generally Well Absorbed", "helper_type": "food",
+             "description": "Molybdenum from food is highly bioavailable (57–88%). No specific dietary factors are known to significantly enhance its absorption under normal conditions.",
+             "source_name": NIH, "source_url": NIH_MOL},
+        ],
+        blockers=[
+            {"blocker_name": "High Sulfate / Sulfur Compounds", "blocker_type": "nutrient",
+             "description": "Sulfate (SO₄²⁻) and molybdate (MoO₄²⁻) share the same transport proteins. Very high sulfate intake from food or supplements can competitively inhibit molybdenum absorption and increase its urinary excretion.",
+             "source_name": NIH, "source_url": NIH_MOL},
+            {"blocker_name": "High Copper Intake", "blocker_type": "nutrient",
+             "description": "Molybdenum and copper have an antagonistic relationship. Very high molybdenum can deplete copper; conversely, high copper intake can interfere with molybdenum metabolism. Balance is important.",
+             "source_name": MAYO, "source_url": MAYO_GEN},
+        ],
+        body_roles=[
+            {"body_system": "Enzyme Cofactor (Sulfite Oxidase)", "explanation": "Molybdenum is an essential cofactor for four metalloenzymes in humans: sulfite oxidase (converts toxic sulfite to harmless sulfate), xanthine oxidase (produces uric acid from purines), aldehyde oxidase (detoxifies aldehydes including retinal), and mitochondrial amidoxime reducing component (mARC). Sulfite oxidase deficiency, though rare, causes severe neurological damage.",
+             "deficiency_signs": "Molybdenum deficiency is extremely rare in healthy people with varied diets. Deficiency in patients on long-term TPN causes tachycardia, tachypnoea, night blindness, and neurological abnormalities.",
+             "source_name": NIH, "source_url": NIH_MOL},
+            {"body_system": "Detoxification", "explanation": "Through aldehyde oxidase and xanthine oxidase, molybdenum-dependent enzymes help detoxify drugs, purines, and sulfur-containing amino acid metabolites. These reactions are particularly important in the liver and intestine.",
+             "source_name": NIH, "source_url": NIH_MOL},
+        ],
+        rda_values=[
+            {"age_group": "19+ years", "sex": "all", "value": 45, "unit": "mcg", "intake_type": "RDA",
+             "upper_limit": 2000, "source_name": NIH, "source_url": NIH_MOL},
+            {"age_group": "14–18 years", "sex": "all", "value": 43, "unit": "mcg", "intake_type": "RDA",
+             "upper_limit": 1700, "source_name": NIH, "source_url": NIH_MOL},
+            {"age_group": "9–13 years", "sex": "all", "value": 34, "unit": "mcg", "intake_type": "RDA",
+             "upper_limit": 1100, "source_name": NIH, "source_url": NIH_MOL},
+            {"age_group": "Pregnancy (19+ years)", "sex": "pregnant", "value": 50, "unit": "mcg", "intake_type": "RDA",
+             "upper_limit": 2000, "source_name": NIH, "source_url": NIH_MOL},
+        ],
+    )
+
+    # ── Choline ───────────────────────────────────────────────────────────────
+    seed_nutrient(
+        db=db, name="Choline", category="Vitamins", solubility="water-soluble",
+        synonyms=["phosphatidylcholine", "lecithin", "choline bitartrate", "CDP-choline",
+                  "citicoline", "Alpha-GPC", "choline chloride", "PC", "GPC",
+                  "trimethylamine N-oxide precursor"],
+        food_sources=[
+            {"food_name": "Beef Liver (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 356, "unit": "mg",
+             "bioavailability_note": "Organ meats are by far the richest dietary source of choline.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"food_name": "Egg (hard-boiled)", "serving_size": "1 large egg (50g)",
+             "amount": 147, "unit": "mg",
+             "bioavailability_note": "Virtually all choline in eggs is in the yolk as phosphatidylcholine. Egg white contains very little. Do not discard yolks if choline intake is a concern.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"food_name": "Atlantic Cod (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 248, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Beef (top round, cooked)", "serving_size": "3 oz (85g)",
+             "amount": 117, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Chicken Breast (roasted)", "serving_size": "3 oz (85g)",
+             "amount": 72, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Soybeans (dry roasted)", "serving_size": "1/2 cup (86g)",
+             "amount": 107, "unit": "mg",
+             "bioavailability_note": "Best plant-based source of choline; soy lecithin supplements are also derived from soybeans.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"food_name": "Salmon (Atlantic, cooked)", "serving_size": "3 oz (85g)",
+             "amount": 56, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Wheat Germ (toasted)", "serving_size": "2 tbsp (14g)",
+             "amount": 51, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Broccoli (cooked)", "serving_size": "1/2 cup (78g)",
+             "amount": 31, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Milk (whole)", "serving_size": "1 cup (244ml)",
+             "amount": 38, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Brussels Sprouts (cooked)", "serving_size": "1/2 cup (78g)",
+             "amount": 32, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Peanut Butter (smooth)", "serving_size": "2 tbsp (32g)",
+             "amount": 20, "unit": "mg", "source_name": USDA, "source_url": USDA_URL},
+        ],
+        helpers=[
+            {"helper_name": "Folate and Vitamin B12", "helper_type": "nutrient",
+             "description": "Choline, folate, and vitamin B12 participate in overlapping one-carbon metabolism (methylation) pathways. When folate or B12 is deficient, the body relies more heavily on dietary choline to maintain methylation reactions. Ensuring adequate B12 and folate spares choline.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"helper_name": "Betaine (from choline oxidation)", "helper_type": "nutrient",
+             "description": "Betaine, which is derived from choline oxidation, can substitute for choline in homocysteine methylation (re-methylation to methionine). Dietary betaine (from beets, spinach, wheat germ) partially spares choline's use in this pathway.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+        ],
+        blockers=[
+            {"blocker_name": "Alcohol", "blocker_type": "food",
+             "description": "Chronic alcohol consumption depletes choline stores and impairs phosphatidylcholine synthesis in the liver, contributing to alcoholic fatty liver disease. Alcohol also increases choline's urinary excretion.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"blocker_name": "Low Oestrogen Levels (post-menopause)", "blocker_type": "physiological",
+             "description": "Oestrogen induces the PEMT enzyme, which allows the body to synthesise some choline from phosphatidylethanolamine. Post-menopausal women with low oestrogen have reduced endogenous choline synthesis and need higher dietary intake.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+        ],
+        body_roles=[
+            {"body_system": "Cell Membrane Structure", "explanation": "Phosphatidylcholine is the predominant phospholipid in most mammalian cell membranes (~50% of membrane phospholipids). It determines membrane fluidity, curvature, and function. Without adequate choline, membranes cannot maintain integrity — this is why choline is essential for every cell in the body.",
+             "deficiency_signs": "Muscle damage, liver dysfunction (fatty liver, hepatic steatosis), increased DNA strand breaks. In infants: impaired brain development and memory function.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"body_system": "Brain and Nervous System", "explanation": "Choline is the precursor to acetylcholine, the neurotransmitter that mediates muscle movement, memory, and attention. Adequate choline during fetal and early-life brain development is critical for hippocampal growth, memory consolidation, and long-term cognitive function.",
+             "deficiency_signs": "Poor memory and learning capacity. Neonatal choline deficiency is associated with lasting cognitive impairment.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"body_system": "Liver Function", "explanation": "Choline is required for the synthesis of VLDL (very low-density lipoprotein), which exports fat from the liver. Without adequate choline, triglycerides accumulate in the liver, causing non-alcoholic fatty liver disease (NAFLD). This is one of the earliest and most clinically significant signs of choline deficiency.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+            {"body_system": "Methylation (Epigenetics)", "explanation": "Choline is oxidised to betaine in the liver, which then donates methyl groups to homocysteine, converting it to methionine. Methionine is the precursor to SAM (S-adenosylmethionine), the universal methyl donor for DNA and histone methylation. Choline therefore influences gene expression, detoxification, and inflammation at an epigenetic level.",
+             "source_name": NIH, "source_url": NIH_CHOL},
+        ],
+        rda_values=[
+            {"age_group": "19+ years", "sex": "male", "value": 550, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 3500, "source_name": NIH, "source_url": NIH_CHOL},
+            {"age_group": "19+ years", "sex": "female", "value": 425, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 3500, "source_name": NIH, "source_url": NIH_CHOL},
+            {"age_group": "14–18 years", "sex": "male", "value": 410, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 3000, "source_name": NIH, "source_url": NIH_CHOL},
+            {"age_group": "14–18 years", "sex": "female", "value": 400, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 3000, "source_name": NIH, "source_url": NIH_CHOL},
+            {"age_group": "Pregnancy (19+ years)", "sex": "pregnant", "value": 450, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 3500, "source_name": NIH, "source_url": NIH_CHOL},
+            {"age_group": "Lactation (19+ years)", "sex": "lactating", "value": 550, "unit": "mg", "intake_type": "AI",
+             "upper_limit": 3500, "source_name": NIH, "source_url": NIH_CHOL},
+        ],
+    )
+
+    # ── Ferritin (Iron Storage Protein) ──────────────────────────────────────
+    seed_nutrient(
+        db=db, name="Ferritin", category="Minerals", solubility=None,
+        synonyms=["serum ferritin", "iron storage protein", "heavy ferritin",
+                  "light ferritin", "apoferritin", "iron stores", "iron storage"],
+        food_sources=[
+            {"food_name": "Beef Liver (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 5.2, "unit": "mg heme iron",
+             "bioavailability_note": "Ferritin itself is not found in food — but eating heme iron from animal liver is the most effective way to build ferritin stores. The body converts absorbed iron into ferritin for storage.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"food_name": "Oysters (cooked)", "serving_size": "3 oz (85g)",
+             "amount": 7.8, "unit": "mg heme iron",
+             "bioavailability_note": "Shellfish heme iron boosts ferritin rapidly. Oysters have the highest iron content among shellfish.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Dark Meat Chicken (roasted)", "serving_size": "3 oz (85g)",
+             "amount": 1.1, "unit": "mg heme iron", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Fortified Breakfast Cereal", "serving_size": "3/4 cup (30g)",
+             "amount": 18.0, "unit": "mg iron",
+             "bioavailability_note": "Fortified non-heme iron is well absorbed; pairing with vitamin C maximises ferritin-building potential.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"food_name": "Spinach (cooked)", "serving_size": "1/2 cup (90g)",
+             "amount": 3.2, "unit": "mg non-heme iron",
+             "bioavailability_note": "Non-heme iron; cook and pair with vitamin C (lemon juice or bell pepper) to increase absorption and ferritin-building.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Tofu (firm)", "serving_size": "1/2 cup (126g)",
+             "amount": 3.4, "unit": "mg non-heme iron",
+             "bioavailability_note": "Good plant-based iron source for building ferritin. Eat with vitamin C-rich foods.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Lentils (cooked)", "serving_size": "1/2 cup (99g)",
+             "amount": 3.3, "unit": "mg non-heme iron",
+             "bioavailability_note": "Rich non-heme iron source. Soak lentils before cooking to reduce phytate and improve iron absorption.",
+             "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Pumpkin Seeds (roasted)", "serving_size": "1 oz (28g)",
+             "amount": 2.5, "unit": "mg non-heme iron", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Kidney Beans (canned)", "serving_size": "1/2 cup (128g)",
+             "amount": 2.6, "unit": "mg non-heme iron", "source_name": USDA, "source_url": USDA_URL},
+            {"food_name": "Blackstrap Molasses", "serving_size": "1 tbsp (20g)",
+             "amount": 3.5, "unit": "mg non-heme iron",
+             "bioavailability_note": "Surprisingly rich non-heme iron source; add to oatmeal or smoothies to boost ferritin.",
+             "source_name": USDA, "source_url": USDA_URL},
+        ],
+        helpers=[
+            {"helper_name": "Vitamin C", "helper_type": "nutrient",
+             "description": "Vitamin C (ascorbic acid) reduces ferric iron (Fe³⁺) to ferrous iron (Fe²⁺), the form absorbed by the intestine, and chelates iron to prevent inhibition by phytate and polyphenols. This is the most effective dietary strategy to increase non-heme iron absorption and raise ferritin levels.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"helper_name": "Heme Iron (from meat/fish)", "helper_type": "food",
+             "description": "Consuming heme iron alongside non-heme iron significantly increases non-heme iron absorption through a poorly understood 'meat factor' effect. This synergy helps build ferritin stores faster when combining plant and animal iron sources.",
+             "source_name": NIH, "source_url": NIH_FERR},
+        ],
+        blockers=[
+            {"blocker_name": "Calcium (taken with meals)", "blocker_type": "nutrient",
+             "description": "Calcium inhibits both heme and non-heme iron absorption. Consuming dairy or calcium supplements with iron-rich meals can reduce ferritin-building by up to 60%.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"blocker_name": "Tea and Coffee (Tannins)", "blocker_type": "food",
+             "description": "Polyphenols in tea and coffee bind non-heme iron in the gut, forming insoluble complexes. Drinking tea or coffee 1 hour before or after iron-rich meals (rather than with them) significantly improves ferritin building.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"blocker_name": "Phytic Acid (Phytate)", "blocker_type": "food",
+             "description": "Phytate in whole grains and legumes forms insoluble complexes with iron, dramatically reducing non-heme iron absorption. Soaking, sprouting, or fermenting these foods reduces phytate content.",
+             "source_name": NIH, "source_url": NIH_FERR},
+        ],
+        body_roles=[
+            {"body_system": "Iron Storage and Homeostasis", "explanation": "Ferritin is the body's primary intracellular iron storage protein. It stores up to 4,500 iron atoms in a safe, non-toxic form inside a protein shell (24 subunits of heavy and light chains). Serum ferritin levels directly reflect total body iron stores — it is the first biomarker to fall in iron deficiency and the last to rise with supplementation. Normal ferritin: 12–300 ng/mL (men), 12–150 ng/mL (women); values below 30 ng/mL indicate depleted stores even before anaemia develops.",
+             "deficiency_signs": "Low serum ferritin (<12 ng/mL) = iron depletion; <30 ng/mL often causes fatigue, brain fog, hair loss, and restless legs even without anaemia. Note: Ferritin is also an acute-phase reactant — it rises during infection/inflammation, which can mask deficiency.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"body_system": "Iron Release and Transport", "explanation": "When iron is needed (e.g., for red blood cell production), ferritin releases iron into circulation, where it binds to transferrin for transport. The liver is the main ferritin storage organ. Haemosiderin is a degraded form of ferritin that stores iron in even larger quantities but releases it more slowly.",
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"body_system": "Antioxidant and Protective Role", "explanation": "By sequestering free iron, ferritin prevents iron from participating in the Fenton reaction (Fe²⁺ + H₂O₂ → Fe³⁺ + OH• + OH⁻), which generates damaging hydroxyl radicals. This iron chelation role makes ferritin a protective antioxidant at the cellular level.",
+             "source_name": NIH, "source_url": NIH_FERR},
+        ],
+        rda_values=[
+            {"age_group": "Reference range (men, 19–60 yrs)", "sex": "male",
+             "value": 30, "unit": "ng/mL serum", "intake_type": "AI",
+             "upper_limit": 300,
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"age_group": "Reference range (women, 19–50 yrs)", "sex": "female",
+             "value": 30, "unit": "ng/mL serum", "intake_type": "AI",
+             "upper_limit": 150,
+             "source_name": NIH, "source_url": NIH_FERR},
+            {"age_group": "Optimal (fatigue prevention)", "sex": "all",
+             "value": 50, "unit": "ng/mL serum", "intake_type": "AI",
+             "upper_limit": None,
+             "source_name": NIH, "source_url": NIH_FERR},
+        ],
+    )
+
+
+def _seed_deficiency_cravings(db: Session) -> None:
+    """Seed deficiency-craving data for all nutrients. Idempotent: delete then re-insert."""
+
+    def _add_cravings(nutrient_name: str, cravings: list[dict]) -> None:
+        nutrient = db.query(Nutrient).filter(Nutrient.name == nutrient_name).first()
+        if not nutrient:
+            return
+        db.query(NutrientDeficiencyCraving).filter(
+            NutrientDeficiencyCraving.nutrient_id == nutrient.id
+        ).delete()
+        db.flush()
+        for c in cravings:
+            src = get_or_create_source(db, c["source_name"], c["source_url"])
+            db.add(NutrientDeficiencyCraving(
+                nutrient_id=nutrient.id,
+                craving_type=c["craving_type"],
+                explanation=c["explanation"],
+                source_id=src.id,
+            ))
+        db.flush()
+
+    # ── Iron ──────────────────────────────────────────────────────────────────
+    _add_cravings("Iron", [
+        {"craving_type": "Ice / Pagophagia",
+         "explanation": "Craving and chewing ice (pagophagia) is the most well-documented craving in iron deficiency. Up to 50% of people with iron-deficiency anaemia report it. The exact mechanism is unclear but may relate to the cooling sensation providing transient relief from oral inflammation caused by low iron, or to dopamine pathway disruption. It resolves within days of iron supplementation.",
+         "source_name": NIH, "source_url": NIH_IRON},
+        {"craving_type": "Non-food items (Pica)",
+         "explanation": "Pica — the compulsive craving for non-nutritive substances such as dirt/clay (geophagia), raw starch (amylophagia), chalk, or paper — is strongly associated with iron deficiency, particularly in pregnancy. Clay and starch may temporarily bind excess iron or provide a sensory signal. These cravings are a recognised clinical indicator warranting iron testing.",
+         "source_name": NIH, "source_url": NIH_IRON},
+        {"craving_type": "Red Meat",
+         "explanation": "The body may signal iron deficiency through strong cravings for red meat and organ meats — the richest dietary sources of heme iron. Heme iron (from animal sources) is absorbed 2–3× more efficiently than plant-based non-heme iron, which may explain why the craving specifically targets meat rather than iron-fortified plant foods.",
+         "source_name": NIH, "source_url": NIH_IRON},
+    ])
+
+    # ── Zinc ──────────────────────────────────────────────────────────────────
+    _add_cravings("Zinc", [
+        {"craving_type": "Salty foods",
+         "explanation": "Zinc is required for the proper function of taste receptor cells and the protein gustin (carbonic anhydrase VI), which maintains taste bud sensitivity. Zinc deficiency causes hypogeusia (reduced taste acuity), leading people to seek more intensely flavoured — particularly salty — foods to compensate for dulled taste perception. This craving resolves with zinc repletion.",
+         "source_name": NIH, "source_url": NIH_ZINC},
+        {"craving_type": "Sweet foods",
+         "explanation": "The same loss of taste acuity from zinc-deficiency-related gustin dysfunction leads to cravings for intensely sweet foods. People report that previously satisfying flavours seem bland, driving them toward highly sweetened foods. Zinc is also involved in insulin synthesis and secretion, so low zinc may contribute to blood sugar dysregulation that reinforces sugar cravings.",
+         "source_name": NIH, "source_url": NIH_ZINC},
+    ])
+
+    # ── Magnesium ─────────────────────────────────────────────────────────────
+    _add_cravings("Magnesium", [
+        {"craving_type": "Chocolate",
+         "explanation": "Dark chocolate is one of the richest dietary sources of magnesium (~64 mg per oz). Strong chocolate cravings are commonly reported with magnesium deficiency, and magnesium deficiency is widespread in Western populations. The craving may represent the body's attempt to correct a shortfall through a magnesium-dense food. Chocolate also contains other compounds (theobromine, phenethylamine) that provide reward, which may reinforce this craving signal.",
+         "source_name": NIH, "source_url": NIH_MAG},
+        {"craving_type": "Carbohydrates / Starchy foods",
+         "explanation": "Magnesium plays a central role in insulin signalling and glucose metabolism — it is required for over 300 enzymatic reactions including pyruvate dehydrogenase and multiple glycolytic enzymes. Magnesium deficiency impairs insulin receptor function and glucose uptake, creating blood sugar fluctuations that drive carbohydrate and starchy food cravings. This is particularly evident in people with type 2 diabetes, who frequently have lower magnesium levels.",
+         "source_name": NIH, "source_url": NIH_MAG},
+    ])
+
+    # ── Calcium ───────────────────────────────────────────────────────────────
+    _add_cravings("Calcium", [
+        {"craving_type": "Dairy products",
+         "explanation": "Calcium-deficient individuals, particularly pregnant and lactating women and adolescents during peak bone growth, often report cravings for milk, yogurt, and cheese — the most calcium-dense dietary sources. The body may use appetite signals to direct intake toward high-calcium foods when serum calcium is being drawn from bone to maintain blood levels.",
+         "source_name": NIH, "source_url": NIH_CALCIUM},
+        {"craving_type": "Chalk / Clay (Pica)",
+         "explanation": "Calcium deficiency, especially during pregnancy, is associated with pica cravings for chalk and clay. Both contain calcium carbonate; chalk (calcium carbonate) is pharmacologically identical to calcium supplements. This pica form is particularly documented in African and South Asian populations where dairy consumption is low and calcium deficiency is common during pregnancy.",
+         "source_name": NIH, "source_url": NIH_CALCIUM},
+    ])
+
+    # ── Vitamin C ─────────────────────────────────────────────────────────────
+    _add_cravings("Vitamin C", [
+        {"craving_type": "Sour / Citrus foods",
+         "explanation": "Cravings for citrus fruits, berries, and other sour foods are commonly reported in early vitamin C deficiency. Citrus fruits are among the highest dietary sources of ascorbic acid. The body may signal deficiency through appetite changes toward these high-vitamin-C foods before clinical scurvy symptoms develop. Pregnant women frequently report citrus cravings, which may reflect increased vitamin C requirements during pregnancy.",
+         "source_name": NIH, "source_url": NIH_VIT_C},
+    ])
+
+    # ── Vitamin D ─────────────────────────────────────────────────────────────
+    _add_cravings("Vitamin D", [
+        {"craving_type": "Fatty fish / Oily foods",
+         "explanation": "Vitamin D is a fat-soluble vitamin found almost exclusively in fatty fish (salmon, mackerel, sardines), egg yolks, and fortified foods. Some researchers hypothesise that cravings for fatty, oily foods may reflect the body's attempt to obtain more vitamin D. Anecdotal evidence and some studies suggest cravings for fatty fish increase in winter months when sunlight-mediated vitamin D synthesis is lowest.",
+         "source_name": NIH, "source_url": NIH_VIT_D},
+        {"craving_type": "Sunlight-seeking behaviour",
+         "explanation": "While not a food craving, vitamin D deficiency is associated with a drive to seek sunlight — the primary source of vitamin D for most humans. This manifests as increased desire to be outdoors, especially in winter. The skin's vitamin D synthesis from UVB radiation is the body's most efficient vitamin D source, and this behavioural drive is thought to be regulated by central nervous system mechanisms linked to vitamin D receptor activity.",
+         "source_name": NIH, "source_url": NIH_VIT_D},
+    ])
+
+    # ── Vitamin B12 ───────────────────────────────────────────────────────────
+    _add_cravings("Vitamin B12", [
+        {"craving_type": "Red meat / Organ meats",
+         "explanation": "Vitamin B12 is found exclusively in animal products, with the highest concentrations in liver, clams, and red meat. B12-deficient individuals — especially those transitioning away from animal products — frequently report strong cravings for meat and organ meats. The body cannot synthesise B12 and has limited stores (2–5 years in the liver), so appetite-driven cravings may emerge as stores are depleted.",
+         "source_name": NIH, "source_url": NIH_VIT_B12},
+        {"craving_type": "Shellfish / Seafood",
+         "explanation": "Clams and oysters have the highest vitamin B12 content of any food (84 mcg and 16 mcg per 3 oz respectively). Deficient individuals often report cravings for seafood specifically. Vegans and vegetarians who have been deficient for extended periods frequently describe sudden, intense cravings for shellfish — a body signal that researchers associate with depleting hepatic B12 stores.",
+         "source_name": NIH, "source_url": NIH_VIT_B12},
+    ])
+
+    # ── Vitamin B9 (Folate) ───────────────────────────────────────────────────
+    _add_cravings("Vitamin B9", [
+        {"craving_type": "Leafy green vegetables",
+         "explanation": "Folate (from Latin 'folium', leaf) gets its name from its abundance in leafy greens — spinach, kale, romaine, and collard greens are among the richest sources. Folate deficiency cravings often include strong desires for fresh salads and dark leafy vegetables, particularly during pregnancy when folate requirements double. These cravings may reflect the body's recognition of its increased need for this critical nutrient.",
+         "source_name": NIH, "source_url": NIH_VIT_B9},
+        {"craving_type": "Legumes / Beans",
+         "explanation": "Lentils, black beans, and chickpeas are some of the highest dietary folate sources (200–350 mcg per cup cooked). Folate-deficient individuals — particularly pregnant women and those with malabsorption — may experience cravings for legume-based dishes such as dal, hummus, and bean soups. This craving is particularly observed in populations where legumes are cultural dietary staples.",
+         "source_name": NIH, "source_url": NIH_VIT_B9},
+    ])
+
+    # ── Vitamin A ─────────────────────────────────────────────────────────────
+    _add_cravings("Vitamin A", [
+        {"craving_type": "Orange / Yellow foods",
+         "explanation": "Beta-carotene, the plant precursor to vitamin A, is responsible for the orange and yellow pigments in carrots, sweet potatoes, mangoes, and pumpkin. Anecdotal evidence and some clinical observations suggest vitamin A-deficient individuals — particularly children in developing countries — show increased preference for orange and yellow plant foods. This may represent a colour-associated appetite signal toward carotenoid-rich foods.",
+         "source_name": NIH, "source_url": NIH_VIT_A},
+        {"craving_type": "Liver / Organ meats",
+         "explanation": "Beef and chicken liver are the most concentrated sources of preformed vitamin A (retinol), providing 6,000–9,000 mcg per serving — well above the 700–900 mcg adult RDA. Vitamin A deficiency is associated with night blindness and immune dysfunction; the body may drive cravings toward the richest animal-source concentrates as an adaptive appetite response, similar to iron-craving behaviours.",
+         "source_name": NIH, "source_url": NIH_VIT_A},
+    ])
+
+    # ── Vitamin E ─────────────────────────────────────────────────────────────
+    _add_cravings("Vitamin E", [
+        {"craving_type": "Nuts and seeds",
+         "explanation": "Almonds, sunflower seeds, and hazelnuts are the richest dietary sources of alpha-tocopherol (vitamin E). Vitamin E deficiency is rare in healthy adults but documented in people with fat malabsorption. When deficient, individuals may experience cravings for these high-fat, nutrient-dense foods. Because vitamin E is fat-soluble and concentrated in plant oils and seeds, fat-seeking appetites in general may reflect vitamin E insufficiency.",
+         "source_name": NIH, "source_url": NIH_VIT_E},
+    ])
+
+    # ── Sodium ────────────────────────────────────────────────────────────────
+    NIH_SOD = "https://ods.od.nih.gov/factsheets/Sodium-HealthProfessional/"
+    _add_cravings("Sodium", [
+        {"craving_type": "Salty foods",
+         "explanation": "Salt craving is the most direct and well-documented deficiency craving in human physiology. Sodium depletion activates the renin-angiotensin-aldosterone system and stimulates the brain's sodium appetite circuits — particularly the nucleus of the solitary tract and the parabrachial nucleus. This creates a powerful, targeted drive to consume sodium-containing foods. Salt craving is particularly strong after excessive sweating, diarrhoea, vomiting, or in Addison's disease (adrenal insufficiency).",
+         "source_name": NIH, "source_url": NIH_SOD},
+    ])
+
+    # ── Potassium ─────────────────────────────────────────────────────────────
+    NIH_POT = "https://ods.od.nih.gov/factsheets/Potassium-HealthProfessional/"
+    _add_cravings("Potassium", [
+        {"craving_type": "Salty / Savoury foods",
+         "explanation": "Paradoxically, potassium deficiency can manifest as cravings for salty foods. The sodium-potassium balance is tightly regulated and the body's electrolyte sensors do not cleanly distinguish between the two minerals. Hypokalaemia (low blood potassium) commonly co-occurs with sodium imbalance, and the resulting electrolyte dysregulation drives savoury food cravings. Potassium-rich savoury foods like avocado, beans, and potatoes often satisfy this craving.",
+         "source_name": NIH, "source_url": NIH_POT},
+        {"craving_type": "Bananas / Starchy fruits",
+         "explanation": "Bananas are widely culturally associated with potassium, and this association has some basis — a medium banana provides ~422 mg potassium (9% of daily needs). People who experience muscle cramps or fatigue from mild potassium deficiency often instinctively reach for bananas. Potassium deficiency symptoms (muscle weakness, cramps, fatigue, constipation) may drive appetite toward dense, starchy fruits and vegetables.",
+         "source_name": NIH, "source_url": NIH_POT},
+    ])
+
+    # ── Protein ───────────────────────────────────────────────────────────────
+    NIH_PROT = "https://www.dietaryguidelines.gov/resources/2020-2025-dietary-guidelines-online-materials"
+    _add_cravings("Protein", [
+        {"craving_type": "Meat / Eggs / Legumes",
+         "explanation": "Protein deficiency triggers a powerful, specific appetite for protein-dense foods through a mechanism called 'protein leverage' — the body prioritises protein intake over total calorie intake. Amino acid-sensing neurons in the hypothalamus detect inadequate amino acid availability and generate targeted cravings for meat, eggs, dairy, and legumes. This drive is so strong that protein-deficient animals will overconsume calories from low-protein diets to meet their protein target.",
+         "source_name": "U.S. Dietary Guidelines 2020–2025",
+         "source_url": NIH_PROT},
+        {"craving_type": "Continuous hunger / Unable to feel full",
+         "explanation": "A hallmark of protein insufficiency is persistent hunger and inability to feel satiated after eating. Protein is the most satiating macronutrient — it suppresses ghrelin (hunger hormone) more effectively than carbohydrates or fats. When protein intake is too low, satiety signals fail to fire properly, leading to constant hunger, frequent snacking, and difficulty maintaining portion control regardless of total calorie intake.",
+         "source_name": "U.S. Dietary Guidelines 2020–2025",
+         "source_url": NIH_PROT},
+    ])
+
+    # ── Omega-3 Fatty Acids ───────────────────────────────────────────────────
+    NIH_OM3 = "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/"
+    _add_cravings("Omega-3 Fatty Acids", [
+        {"craving_type": "Fatty fish / Seafood",
+         "explanation": "Omega-3 fatty acids (EPA and DHA) are found almost exclusively in fatty fish, shellfish, and algae. Low omega-3 intake is one of the most prevalent nutrient inadequacies in Western diets. Research in both humans and animal models shows that omega-3 deficiency increases appetite for fatty foods generally, and some studies document specific cravings for fish. The brain — which is 60% fat and particularly dependent on DHA — may generate appetite signals to restore these critical fatty acids.",
+         "source_name": NIH, "source_url": NIH_OM3},
+    ])
+
+    # ── Omega-6 Fatty Acids ───────────────────────────────────────────────────
+    NIH_OM6 = "https://www.dietaryguidelines.gov/resources/2020-2025-dietary-guidelines-online-materials"
+    _add_cravings("Omega-6 Fatty Acids", [
+        {"craving_type": "Vegetable oils / Fried foods",
+         "explanation": "Linoleic acid (LA), the essential omega-6, is found in vegetable oils, nuts, and seeds. True omega-6 deficiency is rare in Western diets (which tend to be omega-6 abundant). However, in populations with very low fat intake, deficiency cravings for oily and fried foods have been documented. The body requires LA for skin barrier integrity and prostaglandin synthesis; dermatitis from LA deficiency may drive increased appetite for fat-containing foods.",
+         "source_name": "U.S. Dietary Guidelines 2020–2025",
+         "source_url": NIH_OM6},
+    ])
+
+    # ── Selenium ─────────────────────────────────────────────────────────────
+    NIH_SEL = "https://ods.od.nih.gov/factsheets/Selenium-HealthProfessional/"
+    _add_cravings("Selenium", [
+        {"craving_type": "Brazil nuts / Seafood",
+         "explanation": "Brazil nuts contain the highest known dietary selenium concentration (68–91 mcg per nut — up to 130% of daily needs in a single nut). Selenium deficiency has been linked to depression and mood changes due to its role in selenoprotein P and thyroid hormone activation. Some researchers document increased cravings for selenium-rich foods (Brazil nuts, tuna, shrimp) in deficient populations. Selenium also influences dopamine signalling, which may drive reward-seeking cravings toward its richest sources.",
+         "source_name": NIH, "source_url": NIH_SEL},
+    ])
+
+    # ── Iodine ────────────────────────────────────────────────────────────────
+    NIH_IOD = "https://ods.od.nih.gov/factsheets/Iodine-HealthProfessional/"
+    _add_cravings("Iodine", [
+        {"craving_type": "Salty / Iodised foods",
+         "explanation": "Iodine deficiency — the most common cause of preventable intellectual disability globally — is associated with cravings for salty foods, particularly iodised salt, seaweed, and seafood. The thyroid gland concentrates iodine and requires it for T3 and T4 hormone synthesis. Some animal studies show iodine-deficient animals selectively consume iodine-containing solutions, suggesting a specific appetite mechanism. In populations who traditionally ate seaweed (Japan, coastal communities), deficiency may manifest as seaweed cravings.",
+         "source_name": NIH, "source_url": NIH_IOD},
+    ])
+
+    # ── Chromium ──────────────────────────────────────────────────────────────
+    _add_cravings("Chromium", [
+        {"craving_type": "Sweets / Carbohydrates",
+         "explanation": "Chromium (as chromium picolinate or trivalent Cr³⁺) enhances insulin signalling by increasing the number of insulin receptors and improving receptor sensitivity. Chromium deficiency impairs glucose uptake into cells, causing blood sugar fluctuations that generate strong cravings for refined carbohydrates and sweets — the same dysregulation seen in insulin resistance. Clinical studies show that chromium supplementation reduces carbohydrate cravings in some people with insulin resistance and type 2 diabetes.",
+         "source_name": NIH, "source_url": NIH_CHRO},
+    ])
+
+    # ── Vitamin B1 (Thiamine) ─────────────────────────────────────────────────
+    NIH_B1 = "https://ods.od.nih.gov/factsheets/Thiamin-HealthProfessional/"
+    _add_cravings("Vitamin B1", [
+        {"craving_type": "Refined carbohydrates / Sugar",
+         "explanation": "Thiamine (vitamin B1) is the cofactor for pyruvate dehydrogenase, the enzyme that converts pyruvate (from glucose) into acetyl-CoA for the citric acid cycle. When thiamine is depleted, cells cannot efficiently metabolise carbohydrates, yet the brain still demands glucose. This creates a counterproductive craving for refined carbohydrates and sugar — foods that paradoxically worsen thiamine depletion, since high carbohydrate intake increases thiamine requirements. This cycle is a core mechanism in Wernicke's encephalopathy progression.",
+         "source_name": NIH, "source_url": NIH_B1},
+    ])
+
+    # ── Vitamin B2 (Riboflavin) ───────────────────────────────────────────────
+    NIH_B2 = "https://ods.od.nih.gov/factsheets/Riboflavin-HealthProfessional/"
+    _add_cravings("Vitamin B2", [
+        {"craving_type": "Dairy / Meat",
+         "explanation": "Riboflavin (vitamin B2) is most concentrated in organ meats, milk, yogurt, and eggs. Deficiency (ariboflavinosis) causes painful angular cheilitis (cracked mouth corners), glossitis, and skin rashes — symptoms that are sometimes accompanied by increased appetite for the dairy and meat foods that provide relief. These cravings likely reflect a general drive toward nutrient-dense animal foods rather than a riboflavin-specific appetite mechanism.",
+         "source_name": NIH, "source_url": NIH_B2},
+    ])
+
+    # ── Vitamin B3 (Niacin) ───────────────────────────────────────────────────
+    NIH_B3 = "https://ods.od.nih.gov/factsheets/Niacin-HealthProfessional/"
+    _add_cravings("Vitamin B3", [
+        {"craving_type": "Meat / Protein foods",
+         "explanation": "Niacin deficiency (pellagra — 'the disease of the 4 Ds': dermatitis, diarrhoea, dementia, death) historically affected populations subsisting on corn-based diets where niacin is bound in an unabsorbable form. Cravings for meat (chicken, beef, tuna) — the richest dietary niacin sources — are documented in pellagra-risk populations. The body can also synthesise niacin from tryptophan (an amino acid in animal protein), which may explain why meat cravings emerge as a dual-signal for both niacin and tryptophan.",
+         "source_name": NIH, "source_url": NIH_B3},
+    ])
+
+    # ── Vitamin B5 (Pantothenic Acid) ─────────────────────────────────────────
+    NIH_B5 = "https://ods.od.nih.gov/factsheets/PantothenicAcid-HealthProfessional/"
+    _add_cravings("Vitamin B5", [
+        {"craving_type": "Sweet foods / Energy-dense foods",
+         "explanation": "Pantothenic acid is required for synthesis of coenzyme A (CoA), which is essential for fatty acid metabolism and the citric acid cycle. B5 deficiency causes fatigue, irritability, and impaired energy production — symptoms that drive cravings for quick energy sources like sweet and calorie-dense foods. Although isolated B5 deficiency is rare (it's found in nearly all foods), it occurs in severe malnutrition, and the resulting metabolic energy deficit consistently triggers sugar and starchy food cravings.",
+         "source_name": NIH, "source_url": NIH_B5},
+    ])
+
+    # ── Vitamin B6 ────────────────────────────────────────────────────────────
+    NIH_B6 = "https://ods.od.nih.gov/factsheets/VitaminB6-HealthProfessional/"
+    _add_cravings("Vitamin B6", [
+        {"craving_type": "Protein foods / Bananas",
+         "explanation": "Vitamin B6 (pyridoxine) is a cofactor for over 100 enzymes involved in amino acid metabolism, neurotransmitter synthesis (serotonin, dopamine, GABA), and haemoglobin production. Deficiency causes depression, irritability, and peripheral neuropathy — all linked to impaired neurotransmitter synthesis. Low serotonin (which requires B6 for its synthesis from tryptophan) may drive cravings for carbohydrate-rich or tryptophan-containing foods (bananas, chicken, turkey) as the body attempts to restore serotonin production.",
+         "source_name": NIH, "source_url": NIH_B6},
+    ])
+
+    # ── Vitamin B7 (Biotin) ───────────────────────────────────────────────────
+    NIH_B7 = "https://ods.od.nih.gov/factsheets/Biotin-HealthProfessional/"
+    _add_cravings("Vitamin B7", [
+        {"craving_type": "Eggs / Cooked meat",
+         "explanation": "Biotin deficiency is rare but occurs in people who consume large amounts of raw egg whites — which contain avidin, a protein that binds biotin and prevents its absorption. Deficient individuals often report cravings for cooked eggs (cooking denatures avidin, making the egg's biotin fully available) and cooked meats. The hair loss and skin rash of biotin deficiency may also drive general appetite increases toward nutrient-dense foods.",
+         "source_name": NIH, "source_url": NIH_B7},
+    ])
+
+    # ── Phosphorus ────────────────────────────────────────────────────────────
+    NIH_PHOS = "https://ods.od.nih.gov/factsheets/Phosphorus-HealthProfessional/"
+    _add_cravings("Phosphorus", [
+        {"craving_type": "Dairy / Meat / High-protein foods",
+         "explanation": "Phosphorus deficiency (hypophosphataemia) is rare in healthy people since phosphorus is abundant in most foods. When it occurs (refeeding syndrome, malabsorption, antacid overuse), it causes profound muscle weakness, bone pain, and confusion. The body may drive cravings toward dairy products, meat, and legumes — the densest dietary phosphorus sources — as an adaptive response to restore cellular energy production (phosphorus is required for ATP synthesis).",
+         "source_name": NIH, "source_url": NIH_PHOS},
+    ])
+
+    # ── Copper ────────────────────────────────────────────────────────────────
+    NIH_COP = "https://ods.od.nih.gov/factsheets/Copper-HealthProfessional/"
+    _add_cravings("Copper", [
+        {"craving_type": "Shellfish / Nuts",
+         "explanation": "Oysters, crab, and lobster are by far the richest dietary copper sources (oysters provide up to 4.5 mg per 3 oz — 500% of the daily value). Copper deficiency causes anaemia, neutropenia, and bone abnormalities. While specific copper craving research is limited, shellfish and nut consumption increases are documented in populations with low copper status, likely reflecting a general drive toward dense micronutrient sources.",
+         "source_name": NIH, "source_url": NIH_COP},
+    ])
+
+    # ── Manganese ─────────────────────────────────────────────────────────────
+    _add_cravings("Manganese", [
+        {"craving_type": "Whole grains / Nuts",
+         "explanation": "Manganese is found primarily in whole grains, nuts, leafy vegetables, and tea. Manganese deficiency is rare but causes impaired bone formation and reduced antioxidant activity (manganese superoxide dismutase, MnSOD, is the primary mitochondrial antioxidant). Some studies show that manganese-deficient animals preferentially consume manganese-rich foods when offered a choice, suggesting an appetite-based compensation mechanism. In humans, cravings for whole grain and nut-based foods may reflect mild manganese insufficiency.",
+         "source_name": NIH, "source_url": NIH_MANG},
+    ])
+
+    # ── Choline ───────────────────────────────────────────────────────────────
+    _add_cravings("Choline", [
+        {"craving_type": "Eggs / Liver",
+         "explanation": "Egg yolks (147 mg choline per egg) and beef liver (356 mg per 3 oz) are the most concentrated dietary choline sources. Choline deficiency causes muscle damage and fatty liver disease. Studies of choline-deficient diets in controlled settings consistently show increased food-seeking behaviour and appetite for egg-containing and liver-based dishes. Postmenopausal women have higher choline requirements (reduced endogenous synthesis due to low oestrogen) and frequently report egg cravings.",
+         "source_name": NIH, "source_url": NIH_CHOL},
+    ])
+
+    # ── Ferritin ──────────────────────────────────────────────────────────────
+    _add_cravings("Ferritin", [
+        {"craving_type": "Ice / Pagophagia",
+         "explanation": "Low ferritin (depleted iron stores) is the most common cause of pagophagia — the compulsive craving for and chewing of ice. This craving can appear even before iron-deficiency anaemia develops (ferritin can drop to sub-optimal levels while haemoglobin remains normal). A 2016 study found that pagophagia resolved within 1–2 weeks of iron supplementation in nearly all cases. If you crave ice persistently, testing serum ferritin is a key diagnostic step.",
+         "source_name": NIH, "source_url": NIH_FERR},
+        {"craving_type": "Red Meat / Organ meats",
+         "explanation": "Since ferritin reflects iron stores, low ferritin triggers the same meat-craving signals as iron deficiency. The body directs appetite toward heme iron sources (red meat, liver, oysters) because heme iron is absorbed 2–3× more efficiently than non-heme iron and rapidly rebuilds ferritin stores. This craving is particularly pronounced in women of reproductive age, athletes, and vegans/vegetarians — the highest-risk groups for low ferritin.",
+         "source_name": NIH, "source_url": NIH_FERR},
+    ])
+
+    # ── Dietary Fiber ─────────────────────────────────────────────────────────
+    NIH_FIBER = "https://www.dietaryguidelines.gov/resources/2020-2025-dietary-guidelines-online-materials"
+    _add_cravings("Dietary Fiber", [
+        {"craving_type": "Fruits / Vegetables / Whole grains",
+         "explanation": "Dietary fibre is consumed well below recommended levels in most Western populations. Low fibre intake alters gut microbiota composition and reduces production of short-chain fatty acids (SCFAs: butyrate, propionate, acetate), which are gut hormones that signal satiety and regulate appetite. SCFA deficiency leads to increased hunger and cravings for bulky, plant-based foods. The gut-brain axis communicates fibre insufficiency partly through reduced GLP-1 and PYY release, driving appetite toward fibre-rich whole foods.",
+         "source_name": "U.S. Dietary Guidelines 2020–2025",
+         "source_url": NIH_FIBER},
+    ])
+
+    # ── Vitamin K ─────────────────────────────────────────────────────────────
+    NIH_VK = "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+    _add_cravings("Vitamin K", [
+        {"craving_type": "Leafy green vegetables",
+         "explanation": "Vitamin K1 (phylloquinone) is found almost exclusively in dark green leafy vegetables — kale, spinach, collard greens, and broccoli contain 100–800 mcg per serving. Although specific vitamin K craving research is limited, strong appetite for green leafy vegetables is documented in nutritionally deficient populations. Vitamin K deficiency impairs blood clotting and bone mineralisation; the body may signal this through appetite shifts toward the leafy greens that are its primary dietary source.",
+         "source_name": NIH, "source_url": NIH_VK},
+    ])
+
+    db.flush()
+
+
 if __name__ == "__main__":
+    from app.database import Base, engine
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         seed_all(db)
