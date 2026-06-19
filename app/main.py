@@ -88,8 +88,16 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "..", "static")), name="static")
+STATIC_DIR = os.path.join(BASE_DIR, "..", "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+# Cache-busting query string for static assets: changes whenever main.js or
+# style.css is edited, so browsers fetch the new file instead of a stale cache.
+templates.env.globals["asset_version"] = int(max(
+    os.path.getmtime(os.path.join(STATIC_DIR, "main.js")),
+    os.path.getmtime(os.path.join(STATIC_DIR, "style.css")),
+))
 
 
 # ─── Custom error handlers ───────────────────────────────────────────────────

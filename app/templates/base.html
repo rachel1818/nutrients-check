@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Nutrient Check{% endblock %}</title>
   {% block meta %}{% endblock %}
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v={{ asset_version }}">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -15,7 +15,6 @@
     <nav class="site-nav">
       <a href="/" class="site-logo">NutriCheck</a>
       <div class="site-nav-links">
-        <a href="/nutrients" class="nav-link">Browse</a>
         <a href="/nutrients" class="btn-nav">All Nutrients</a>
       </div>
     </nav>
@@ -34,9 +33,9 @@
       <a href="https://my.clevelandclinic.org/" target="_blank" rel="noopener">Cleveland Clinic</a>, and
       <a href="https://www.mayoclinic.org/" target="_blank" rel="noopener">Mayo Clinic</a>.
     </p>
-    <p style="margin-top:0.4rem;opacity:0.7;">This app is for educational purposes only and is not medical advice.</p>
+    <p class="footer-disclaimer-glow">⚠️ This app is for educational purposes only and is not medical advice.</p>
   </footer>
 
-  <script src="/static/main.js"></script>
+  <script src="/static/main.js?v={{ asset_version }}"></script>
 </body>
 </html>

@@ -172,51 +172,94 @@
     </div>
 
     <!-- ── Middle: Absorption ─────────────────────────────────────────── -->
-    <div class="results-column">
-      <div class="column-title">⬆️ What Improves Absorption</div>
+    <div class="absorption-stack">
 
-      {% if nutrient.absorption_helpers %}
-      <ul class="absorption-list">
-        {% for helper in nutrient.absorption_helpers %}
-        <li class="absorption-card">
-          <h4>{{ helper.helper_name }}
-            <span style="font-size:0.73rem;font-weight:400;color:var(--text-muted);">({{ helper.helper_type }})</span>
-          </h4>
-          <p>{{ helper.description }}</p>
-          <div class="absorption-source">
-            <a href="{{ helper.source.url }}" target="_blank" rel="noopener" class="source-link">
-              {{ helper.source.name }} ↗
-            </a>
+      <div class="results-column">
+        <button class="absorption-toggle" id="absorption-helpers-toggle"
+                aria-expanded="false" aria-controls="absorption-helpers-content">
+          ⬆️ What Improves Absorption
+          <span class="absorption-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="absorption-content" id="absorption-helpers-content" hidden>
+          {% if nutrient.absorption_helpers %}
+          <ul class="absorption-list">
+            {% for helper in nutrient.absorption_helpers %}
+            <li class="absorption-card">
+              <h4>{{ helper.helper_name }}
+                <span style="font-size:0.73rem;font-weight:400;color:var(--text-muted);">({{ helper.helper_type }})</span>
+              </h4>
+              <p>{{ helper.description }}</p>
+              <div class="absorption-source">
+                <a href="{{ helper.source.url }}" target="_blank" rel="noopener" class="source-link">
+                  {{ helper.source.name }} ↗
+                </a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="placeholder-msg">No absorption helper data available yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="results-column">
+        <button class="absorption-toggle absorption-toggle--blocker" id="absorption-blockers-toggle"
+                aria-expanded="false" aria-controls="absorption-blockers-content">
+          ⬇️ What Reduces Absorption
+          <span class="absorption-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="absorption-content" id="absorption-blockers-content" hidden>
+          {% if nutrient.absorption_blockers %}
+          <ul class="absorption-list">
+            {% for blocker in nutrient.absorption_blockers %}
+            <li class="absorption-card blocker">
+              <h4>{{ blocker.blocker_name }}
+                <span style="font-size:0.73rem;font-weight:400;color:var(--text-muted);">({{ blocker.blocker_type }})</span>
+              </h4>
+              <p>{{ blocker.description }}</p>
+              <div class="absorption-source">
+                <a href="{{ blocker.source.url }}" target="_blank" rel="noopener" class="source-link">
+                  {{ blocker.source.name }} ↗
+                </a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="placeholder-msg">No absorption blocker data available yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if nutrient.deficiency_cravings %}
+      <div class="results-column">
+        <button class="absorption-toggle cravings-toggle" id="cravings-toggle"
+                aria-expanded="false" aria-controls="cravings-content">
+          🧠 Check Cravings!
+          <span class="absorption-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="absorption-content cravings-content" id="cravings-content" hidden>
+          <p class="cravings-subtitle">When {{ nutrient.name | lower }} is depleted, the body may signal deficiency through unusual food cravings or appetite changes.</p>
+          <div class="cravings-list">
+            {% for craving in nutrient.deficiency_cravings %}
+            <div class="craving-card">
+              <div class="craving-type-badge">{{ craving.craving_type }}</div>
+              <p class="craving-explanation">{{ craving.explanation }}</p>
+              <div class="craving-source">
+                <a href="{{ craving.source.url }}" target="_blank" rel="noopener" class="source-link">
+                  {{ craving.source.name }} ↗
+                </a>
+              </div>
+            </div>
+            {% endfor %}
           </div>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="placeholder-msg">No absorption helper data available yet.</p>
+          <p class="cravings-disclaimer">⚠️ Cravings alone are not a reliable diagnostic tool. Consult a healthcare professional for deficiency testing.</p>
+        </div>
+      </div>
       {% endif %}
 
-      <div class="section-divider">⬇️ What Reduces Absorption</div>
-
-      {% if nutrient.absorption_blockers %}
-      <ul class="absorption-list">
-        {% for blocker in nutrient.absorption_blockers %}
-        <li class="absorption-card blocker">
-          <h4>{{ blocker.blocker_name }}
-            <span style="font-size:0.73rem;font-weight:400;color:var(--text-muted);">({{ blocker.blocker_type }})</span>
-          </h4>
-          <p>{{ blocker.description }}</p>
-          <div class="absorption-source">
-            <a href="{{ blocker.source.url }}" target="_blank" rel="noopener" class="source-link">
-              {{ blocker.source.name }} ↗
-            </a>
-          </div>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="placeholder-msg">No absorption blocker data available yet.</p>
-      {% endif %}
-    </div>
+    </div><!-- /absorption-stack -->
 
     <!-- ── Right: Body Roles + RDA ────────────────────────────────────── -->
     <div class="results-column">
@@ -280,33 +323,6 @@
     </div>
 
   </div><!-- /results-grid -->
-
-  {% if nutrient.deficiency_cravings %}
-  <!-- ── Deficiency Cravings ──────────────────────────────────────────────── -->
-  <div class="cravings-section">
-    <div class="cravings-header">
-      <span class="cravings-icon" aria-hidden="true">🧠</span>
-      <div>
-        <h2 class="cravings-title">What Your Body Craves When Low in {{ nutrient.name }}</h2>
-        <p class="cravings-subtitle">When {{ nutrient.name | lower }} is depleted, the body may signal deficiency through unusual food cravings or appetite changes.</p>
-      </div>
-    </div>
-    <div class="cravings-grid">
-      {% for craving in nutrient.deficiency_cravings %}
-      <div class="craving-card">
-        <div class="craving-type-badge">{{ craving.craving_type }}</div>
-        <p class="craving-explanation">{{ craving.explanation }}</p>
-        <div class="craving-source">
-          <a href="{{ craving.source.url }}" target="_blank" rel="noopener" class="source-link">
-            {{ craving.source.name }} ↗
-          </a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <p class="cravings-disclaimer">⚠️ Cravings alone are not a reliable diagnostic tool. Consult a healthcare professional for deficiency testing.</p>
-  </div>
-  {% endif %}
 
   {% elif suggestions %}
   <div class="not-found-section">

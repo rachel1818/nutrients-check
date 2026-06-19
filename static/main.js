@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSearchValidation();
   initRdaBars();
   initCardAnimations();
+  initCollapsibleToggles();
   initChat();
 });
 
@@ -21,7 +22,7 @@ function initCursor() {
   });
 
   // Grow dot when hovering interactive elements
-  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill";
+  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill, .cravings-toggle, .absorption-toggle";
   document.addEventListener("mouseover", (e) => {
     if (e.target.closest(interactiveSelector)) {
       dot.classList.add("hovering");
@@ -255,6 +256,7 @@ function initCardAnimations() {
   _slideFoodCards();
   _fadeColumns();
   _bouncePills();
+  _glowCravingsDisclaimer();
 }
 
 /* Food cards slide in from the left, staggered 80 ms apart */
@@ -296,6 +298,25 @@ function _fadeColumns() {
   cols.forEach(col => observer.observe(col));
 }
 
+/* Cravings disclaimer glows once, only when it's actually scrolled into view
+   (it starts inside a collapsed panel, so this fires the first time the user
+   opens the section AND it's visible on screen — not just on click). */
+function _glowCravingsDisclaimer() {
+  const el = document.querySelector(".cravings-disclaimer");
+  if (!el || !window.IntersectionObserver) {
+    if (el) el.classList.add("glow-once");
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("glow-once");
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.5 });
+  observer.observe(el);
+}
+
 /* Category pills bounce in with staggered delay on the All Nutrients page */
 function _bouncePills() {
   const pills = document.querySelectorAll(".category-pill");
@@ -306,7 +327,20 @@ function _bouncePills() {
   });
 }
 
-/* ─── 6. Per-nutrient floating chat ─────────────────────────────────────── */
+/* ─── 6. Collapsible toggles (cravings, absorption helpers/blockers) ────── */
+function initCollapsibleToggles() {
+  document.querySelectorAll(".cravings-toggle, .absorption-toggle").forEach((btn) => {
+    const content = document.getElementById(btn.getAttribute("aria-controls"));
+    if (!content) return;
+    btn.addEventListener("click", () => {
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!expanded));
+      content.hidden = expanded;
+    });
+  });
+}
+
+/* ─── 7. Per-nutrient floating chat ─────────────────────────────────────── */
 function initChat() {
   const bubble = document.getElementById("chat-bubble");
   if (!bubble) return; // not on a nutrient page
