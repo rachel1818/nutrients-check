@@ -96,7 +96,7 @@ def answer_about_nutrient(
     """
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
     if not api_key:
-        return {"answer": "Chat is unavailable — ANTHROPIC_API_KEY is not configured."}
+        return {"answer": "Chat is unavailable: ANTHROPIC_API_KEY is not configured."}
 
     nutrient_title = (
         f"{nutrient.name} vs {comparison.name}" if comparison else nutrient.name
@@ -131,9 +131,9 @@ def answer_about_nutrient(
         return {"answer": response.content[0].text}
 
     except anthropic.AuthenticationError:
-        return {"answer": "Chat is unavailable — invalid API key. Please check your ANTHROPIC_API_KEY."}
+        return {"answer": "Chat is unavailable: invalid API key. Please check your ANTHROPIC_API_KEY."}
     except anthropic.RateLimitError:
-        return {"answer": "Too many requests — please wait a moment and try again."}
+        return {"answer": "Too many requests. Please wait a moment and try again."}
     except anthropic.APIError as exc:
         msg = getattr(exc, "message", None) or str(exc)
         return {"answer": f"Chat is temporarily unavailable. ({msg})"}

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}All Nutrients — Nutrient Check{% endblock %}
+{% block title %}All Nutrients Nutrient Check{% endblock %}
 
 {% block meta %}
-<meta name="description" content="Browse all nutrients by category — vitamins, minerals, macronutrients, and fatty acids.">
+<meta name="description" content="Browse all nutrients by category: vitamins, minerals, macronutrients, and fatty acids.">
 {% endblock %}
 
 {% block content %}
@@ -11,37 +11,69 @@
   <h1>All Nutrients</h1>
   <p>Browse by category.</p>
 
-  {% set emoji_map = {
-    "Vitamin A":           "🥕",
-    "Vitamin B1":          "🌾",
-    "Vitamin B2":          "🥛",
-    "Vitamin B3":          "🍗",
-    "Vitamin B5":          "🥑",
-    "Vitamin B6":          "🍌",
-    "Vitamin B7":          "🥚",
-    "Vitamin B9":          "🥬",
-    "Vitamin B12":         "🐟",
-    "Vitamin C":           "🍊",
-    "Vitamin D":           "☀️",
-    "Vitamin E":           "🌻",
-    "Vitamin K":           "🥦",
-    "Iron":                "🥩",
-    "Calcium":             "🦴",
-    "Zinc":                "🦪",
-    "Magnesium":           "🥜",
-    "Potassium":           "🍌",
-    "Phosphorus":          "🐠",
-    "Selenium":            "🌰",
-    "Iodine":              "🌊",
-    "Copper":              "🦞",
-    "Sodium":              "🧂",
-    "Dietary Fiber":       "🌾",
-    "Added Sugar":         "🍬",
-    "Protein":             "💪",
-    "Omega-3 Fatty Acids": "🐟",
-    "Omega-6 Fatty Acids": "🌻",
-    "Omega-9 Fatty Acids": "🫒"
+  {% set food_emoji_map = {
+    "liver":       "🥩", "beef":        "🥩", "lamb":       "🥩", "venison":   "🥩",
+    "pork":        "🥓", "bacon":       "🥓",
+    "chicken":     "🍗", "turkey":      "🍗",
+    "salmon":      "🐟", "tuna":        "🐟", "sardine":    "🐟", "mackerel":  "🐟",
+    "trout":       "🐟", "herring":     "🐟", "anchovy":    "🐟", "fish":      "🐟",
+    "swordfish":   "🐠", "cod":         "🐠", "tilapia":    "🐠",
+    "shrimp":      "🦐", "prawn":       "🦐",
+    "oyster":      "🦪", "clam":        "🦪", "mussel":     "🦪",
+    "crab":        "🦞", "lobster":     "🦞",
+    "egg":         "🥚",
+    "milk":        "🥛", "yogurt":      "🥛", "curd":       "🥛",
+    "cheese":      "🧀", "paneer":      "🧀",
+    "butter":      "🧈",
+    "carrot":      "🥕",
+    "sweet potato":"🍠", "yam":         "🍠",
+    "spinach":     "🌿", "kale":        "🌿", "chard":      "🌿",
+    "broccoli":    "🥦", "cabbage":     "🥦",
+    "tomato":      "🍅",
+    "potato":      "🥔",
+    "avocado":     "🥑",
+    "banana":      "🍌", "plantain":    "🍌",
+    "orange":      "🍊", "citrus":      "🍊", "lemon":      "🍋", "lime":      "🍋",
+    "apple":       "🍎",
+    "berry":       "🫐", "blueberry":   "🫐", "strawberry": "🍓",
+    "mango":       "🥭",
+    "guava":       "🍏",
+    "pineapple":   "🍍",
+    "cantaloupe":  "🍈", "melon":       "🍈",
+    "grape":       "🍇",
+    "mushroom":    "🍄",
+    "nuts":        "🥜", "peanut":      "🥜", "almond":     "🌰", "walnut":    "🌰",
+    "cashew":      "🌰", "pistachio":   "🌰", "brazil":     "🌰",
+    "seed":        "🌱", "flax":        "🌱", "chia":       "🌱",
+    "sunflower":   "🌻",
+    "oat":         "🌾", "wheat":       "🌾", "grain":      "🌾", "rye":       "🌾",
+    "rice":        "🍚", "quinoa":      "🍚",
+    "bread":       "🍞", "fortified":   "🍞",
+    "bean":        "🫘", "lentil":      "🫘", "dal":        "🫘", "chickpea":  "🫘",
+    "soy":         "🫘", "tofu":        "🫘", "tempeh":     "🫘",
+    "seaweed":     "🌊", "nori":        "🌊", "kelp":       "🌊",
+    "salt":        "🧂",
+    "sugar":       "🍬",
+    "oil":         "🫙",
+    "olive":       "🫒",
+    "chocolate":   "🍫", "cocoa":       "🍫",
+    "coffee":      "☕",
+    "juice":       "🥤",
+    "moringa":     "🌿", "amaranth":    "🌿",
+    "ragi":        "🌾", "bajra":       "🌾", "jowar":      "🌾",
+    "coconut":     "🥥"
   } %}
+
+  {# Pick an emoji by scanning a food name against the keyword map above #}
+  {% macro food_emoji(food_name, map, default="🌿") -%}
+    {%- set ns = namespace(icon=default) -%}
+    {%- for keyword, emoji in map.items() -%}
+      {%- if keyword.lower() in food_name.lower() -%}
+        {%- set ns.icon = emoji -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {{- ns.icon -}}
+  {%- endmacro %}
 
   {% set category_labels = {
     "Vitamins":       "💊 Vitamins",
@@ -56,7 +88,7 @@
     <div class="nutrient-grid">
       {% for nutrient in items %}
       <a href="/nutrients/{{ nutrient.id }}" class="category-pill">
-        <span class="pill-emoji">{{ emoji_map.get(nutrient.name, "🌿") }}</span>
+        <span class="pill-emoji">{{ food_emoji(nutrient.food_sources[0].food_name, food_emoji_map) if nutrient.food_sources else "🌿" }}</span>
         {{ nutrient.name }}
       </a>
       {% endfor %}

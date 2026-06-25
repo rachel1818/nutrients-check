@@ -22,7 +22,7 @@ function initCursor() {
   });
 
   // Grow dot when hovering interactive elements
-  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill, .cravings-toggle, .absorption-toggle";
+  const interactiveSelector = "a, button, input, select, textarea, label, [role='button'], [role='option'], .food-card, .category-pill, .cravings-toggle, .absorption-toggle, .toggle-card";
   document.addEventListener("mouseover", (e) => {
     if (e.target.closest(interactiveSelector)) {
       dot.classList.add("hovering");
@@ -332,10 +332,24 @@ function initCollapsibleToggles() {
   document.querySelectorAll(".cravings-toggle, .absorption-toggle").forEach((btn) => {
     const content = document.getElementById(btn.getAttribute("aria-controls"));
     if (!content) return;
-    btn.addEventListener("click", () => {
+
+    function toggle() {
       const expanded = btn.getAttribute("aria-expanded") === "true";
       btn.setAttribute("aria-expanded", String(!expanded));
       content.hidden = expanded;
+    }
+
+    btn.addEventListener("click", toggle);
+
+    // Clicking anywhere else in the card (not just the header button) also
+    // opens/closes it — but let links inside the expanded content (source
+    // links, etc.) work normally instead of toggling.
+    const card = btn.closest(".results-column") || btn.parentElement;
+    card.classList.add("toggle-card");
+    card.addEventListener("click", (e) => {
+      if (btn.contains(e.target)) return;
+      if (e.target.closest("a")) return;
+      toggle();
     });
   });
 }
@@ -370,7 +384,7 @@ function initChat() {
     chatInput.focus();
     if (!msgArea.children.length) {
       _appendMsg("assistant",
-        `Hi! Ask me anything about <strong>${nutrientName}</strong> — food sources, ` +
+        `Hi! Ask me anything about <strong>${nutrientName}</strong>: food sources, ` +
         `absorption, deficiency signs, RDA, and more.`
       );
     }
@@ -449,7 +463,7 @@ function initChat() {
         if (history.length > 8) history = history.slice(-8);
       }
     } catch {
-      _appendMsg("error", "Network error — could not reach the server.");
+      _appendMsg("error", "Network error: could not reach the server.");
     }
 
     sendBtn.disabled    = false;

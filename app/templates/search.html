@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-  {% if nutrient %}{{ nutrient.name }} — Nutrient Check{% else %}Search — Nutrient Check{% endif %}
+  {% if nutrient %}{{ nutrient.name }} Nutrient Check{% else %}Search Nutrient Check{% endif %}
 {% endblock %}
 
 {% block meta %}
@@ -20,39 +20,7 @@
 
   {% if nutrient %}
 
-  {# ── emoji maps ──────────────────────────────────────────────────────── #}
-  {% set emoji_map = {
-    "Vitamin A":           "🥕",
-    "Vitamin B1":          "🌾",
-    "Vitamin B2":          "🥛",
-    "Vitamin B3":          "🍗",
-    "Vitamin B5":          "🥑",
-    "Vitamin B6":          "🍌",
-    "Vitamin B7":          "🥚",
-    "Vitamin B9":          "🥬",
-    "Vitamin B12":         "🐟",
-    "Vitamin C":           "🍊",
-    "Vitamin D":           "☀️",
-    "Vitamin E":           "🌻",
-    "Vitamin K":           "🥦",
-    "Iron":                "🥩",
-    "Calcium":             "🦴",
-    "Zinc":                "🦪",
-    "Magnesium":           "🥜",
-    "Potassium":           "🍌",
-    "Phosphorus":          "🐠",
-    "Selenium":            "🌰",
-    "Iodine":              "🌊",
-    "Copper":              "🦞",
-    "Sodium":              "🧂",
-    "Dietary Fiber":       "🌾",
-    "Added Sugar":         "🍬",
-    "Protein":             "💪",
-    "Omega-3 Fatty Acids": "🐟",
-    "Omega-6 Fatty Acids": "🌻",
-    "Omega-9 Fatty Acids": "🫒"
-  } %}
-
+  {# ── emoji map ───────────────────────────────────────────────────────── #}
   {% set food_emoji_map = {
     "liver":       "🥩", "beef":        "🥩", "lamb":       "🥩", "venison":   "🥩",
     "pork":        "🥓", "bacon":       "🥓",
@@ -106,10 +74,21 @@
     "coconut":     "🥥"
   } %}
 
+  {# Pick an emoji by scanning a food name against the keyword map above #}
+  {% macro food_emoji(food_name, map, default="🍽️") -%}
+    {%- set ns = namespace(icon=default) -%}
+    {%- for keyword, emoji in map.items() -%}
+      {%- if keyword.lower() in food_name.lower() -%}
+        {%- set ns.icon = emoji -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {{- ns.icon -}}
+  {%- endmacro %}
+
   {# ── Nutrient hero ─────────────────────────────────────────────────── #}
   <div class="nutrient-hero">
     <span class="nutrient-hero-emoji" role="img" aria-hidden="true">
-      {{ emoji_map.get(nutrient.name, "🌿") }}
+      {{ food_emoji(top_foods[0].food_name, food_emoji_map, "🌿") if top_foods else "🌿" }}
     </span>
     <div class="nutrient-hero-text">
       <span class="category-badge">{{ nutrient.category }}</span>
@@ -130,16 +109,8 @@
       <ul class="food-list" id="food-list">
         {% for food in top_foods %}
 
-        {# Pick food emoji by scanning food name against keyword map #}
-        {% set ns = namespace(fmoji="🍽️") %}
-        {% for keyword, emoji in food_emoji_map.items() %}
-          {% if keyword.lower() in food.food_name.lower() %}
-            {% set ns.fmoji = emoji %}
-          {% endif %}
-        {% endfor %}
-
         <li class="food-card">
-          <div class="food-card-emoji" aria-hidden="true">{{ ns.fmoji }}</div>
+          <div class="food-card-emoji" aria-hidden="true">{{ food_emoji(food.food_name, food_emoji_map) }}</div>
           <div class="food-card-body">
             <h4>{{ food.food_name }}</h4>
             <div class="food-amount">{{ food.amount }} {{ food.unit }}</div>

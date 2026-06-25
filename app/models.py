@@ -50,7 +50,10 @@ class Nutrient(Base):
         "NutrientRdaValue", back_populates="nutrient", cascade="all, delete-orphan"
     )
     food_sources: Mapped[list["NutrientFoodSource"]] = relationship(
-        "NutrientFoodSource", back_populates="nutrient", cascade="all, delete-orphan"
+        "NutrientFoodSource",
+        back_populates="nutrient",
+        cascade="all, delete-orphan",
+        order_by="NutrientFoodSource.amount.desc()",
     )
     absorption_helpers: Mapped[list["NutrientAbsorptionHelper"]] = relationship(
         "NutrientAbsorptionHelper", back_populates="nutrient", cascade="all, delete-orphan"

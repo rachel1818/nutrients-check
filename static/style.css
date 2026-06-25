@@ -29,17 +29,18 @@
   position: fixed;
   top: 0; left: 0;
   width: 13px; height: 13px;
-  background: var(--black);
+  background: #fff;
   border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%);
-  transition: width 0.15s ease, height 0.15s ease, background 0.2s ease;
+  transition: width 0.15s ease, height 0.15s ease;
   z-index: 99999;
-  mix-blend-mode: multiply;
+  /* Inverts against whatever's underneath, so it stays visible on every
+     background color without having to detect what's behind it. */
+  mix-blend-mode: difference;
 }
 .cursor-dot.hovering {
   width: 28px; height: 28px;
-  background: var(--green);
 }
 
 html, a, button, input, select, textarea, label, [role="button"] { cursor: none !important; }
