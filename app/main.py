@@ -293,15 +293,6 @@ async def nutrient_detail(request: Request, nutrient_id: int, db: Session = Depe
         },
     )
 
-
-@app.get("/nutrients/{nutrient_id}/foods", response_class=HTMLResponse)
-async def nutrient_detail_foods(
-    request: Request, nutrient_id: int, db: Session = Depends(get_db)
-):
-    """Redirect to detail page — this route exists only for completeness."""
-    raise HTTPException(status_code=404)
-
-
 if __name__ == "__main__":
     import uvicorn
 
