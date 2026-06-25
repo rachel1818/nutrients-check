@@ -48,6 +48,53 @@
   .cursor-dot { display: none; }
 }
 
+/* ─── Hover effects (mouse/trackpad only) ───────────────────────────────────
+   On touch devices, an unguarded `:hover` rule on a link makes the browser
+   treat the first tap as "simulate hover" and only the second tap as the
+   actual click — so links need two taps to navigate. Scoping every hover
+   effect to devices that can really hover fixes that and changes nothing
+   for anyone with a mouse or trackpad. */
+@media (hover: hover) {
+  a:hover { text-decoration: underline; }
+  .site-logo:hover { text-decoration: none; opacity: 0.75; }
+  .nav-link:hover { color: var(--black); text-decoration: none; }
+  .btn-nav:hover { background: var(--black); color: #fff; text-decoration: none; }
+  .site-footer a:hover { color: #fff; }
+  .search-btn:hover { background: var(--green-dark); }
+  .autocomplete-dropdown li:hover { background: var(--green-pale); color: var(--black); }
+  .food-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 3px 3px 0 var(--green);
+    border-color: var(--black);
+  }
+  .show-more-btn:hover {
+    background: var(--black);
+    color: #fff;
+    box-shadow: 3px 3px 0 var(--green);
+  }
+  .source-link:hover { opacity: 1; }
+  .suggestions-list a:hover { background: var(--black); color: #fff; text-decoration: none; }
+  .semantic-card:hover {
+    border-color: var(--black);
+    box-shadow: 3px 3px 0 var(--green);
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+  .category-pill:hover {
+    background: var(--black);
+    color: #fff;
+    border-color: var(--black);
+    text-decoration: none;
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 4px 4px 0 var(--green);
+  }
+  .btn-home:hover { box-shadow: 5px 5px 0 var(--green); text-decoration: none; }
+  .craving-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+  }
+}
+
 html, a, button, input, select, textarea, label, [role="button"] { cursor: none !important; }
 
 /* ─── Water Ripple ──────────────────────────────────────────────────────── */
@@ -92,7 +139,6 @@ body {
 
 h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 700; }
 a { color: var(--green-dark); text-decoration: none; }
-a:hover { text-decoration: underline; }
 
 /* ─── Keyframes ─────────────────────────────────────────────────────────── */
 @keyframes float {
@@ -178,8 +224,6 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
   letter-spacing: -0.02em;
 }
-.site-logo:hover { text-decoration: none; opacity: 0.75; }
-
 .site-nav-links {
   display: flex;
   align-items: center;
@@ -193,8 +237,6 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
   transition: color 0.15s;
 }
-.nav-link:hover { color: var(--black); text-decoration: none; }
-
 .btn-nav {
   background: transparent;
   color: var(--black);
@@ -207,7 +249,6 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
   transition: background 0.2s, color 0.2s;
 }
-.btn-nav:hover { background: var(--black); color: #fff; text-decoration: none; }
 
 /* ─── Footer ────────────────────────────────────────────────────────────── */
 .site-footer {
@@ -219,7 +260,6 @@ a:hover { text-decoration: underline; }
   font-size: 0.82rem;
 }
 .site-footer a { color: rgba(255,255,255,0.75); }
-.site-footer a:hover { color: #fff; }
 
 .footer-disclaimer-glow {
   margin-top: 0.5rem;
@@ -389,7 +429,6 @@ a:hover { text-decoration: underline; }
   min-width: 96px;
   border-radius: 0 50px 50px 0;
 }
-.search-btn:hover { background: var(--green-dark); }
 .search-btn:disabled { opacity: 0.7; }
 .search-btn.loading { color: transparent; }
 .search-btn.loading::after {
@@ -427,7 +466,6 @@ a:hover { text-decoration: underline; }
   transition: background 0.1s;
 }
 .autocomplete-dropdown li:last-child { border-bottom: none; }
-.autocomplete-dropdown li:hover,
 .autocomplete-dropdown li[aria-selected="true"] {
   background: var(--green-pale);
   color: var(--black);
@@ -572,11 +610,6 @@ a:hover { text-decoration: underline; }
   gap: 0.9rem;
   align-items: flex-start;
 }
-.food-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 3px 3px 0 var(--green);
-  border-color: var(--black);
-}
 .food-card-emoji {
   font-size: 1.9rem;
   line-height: 1;
@@ -622,11 +655,6 @@ a:hover { text-decoration: underline; }
   font-weight: 700;
   color: var(--black);
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-}
-.show-more-btn:hover {
-  background: var(--black);
-  color: #fff;
-  box-shadow: 3px 3px 0 var(--green);
 }
 
 /* ─── Absorption Cards ──────────────────────────────────────────────────── */
@@ -768,7 +796,6 @@ a:hover { text-decoration: underline; }
   text-decoration: underline;
   opacity: 0.8;
 }
-.source-link:hover { opacity: 1; }
 
 /* ─── Not-Found / Suggestions ──────────────────────────────────────────── */
 .not-found-section {
@@ -801,7 +828,6 @@ a:hover { text-decoration: underline; }
   font-family: var(--font-heading);
   transition: background 0.2s, color 0.2s;
 }
-.suggestions-list a:hover { background: var(--black); color: #fff; text-decoration: none; }
 
 /* ─── Semantic results ──────────────────────────────────────────────────── */
 .semantic-label {
@@ -825,12 +851,6 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius);
   text-decoration: none;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-}
-.semantic-card:hover {
-  border-color: var(--black);
-  box-shadow: 3px 3px 0 var(--green);
-  transform: translateY(-2px);
-  text-decoration: none;
 }
 .semantic-card-name { font-weight: 700; font-size: 0.95rem; color: var(--black); font-family: var(--font-heading); }
 .semantic-card-cat  { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
@@ -895,14 +915,6 @@ a:hover { text-decoration: underline; }
   line-height: 1;
   display: block;
 }
-.category-pill:hover {
-  background: var(--black);
-  color: #fff;
-  border-color: var(--black);
-  text-decoration: none;
-  transform: translateY(-4px) scale(1.04);
-  box-shadow: 4px 4px 0 var(--green);
-}
 
 /* ─── Error Pages ───────────────────────────────────────────────────────── */
 .error-page {
@@ -933,7 +945,6 @@ a:hover { text-decoration: underline; }
   transition: box-shadow 0.2s;
   box-shadow: 3px 3px 0 var(--green);
 }
-.btn-home:hover { box-shadow: 5px 5px 0 var(--green); text-decoration: none; }
 
 /* ─── Deficiency Cravings (own container, stacked below absorption) ────── */
 .cravings-toggle {
@@ -961,10 +972,6 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
   gap: 0.5rem;
   transition: box-shadow 0.2s, transform 0.2s;
-}
-.craving-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-1px);
 }
 .craving-type-badge {
   display: inline-block;
