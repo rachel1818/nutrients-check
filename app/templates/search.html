@@ -258,6 +258,7 @@
       {% if nutrient.rda_values %}
       <div class="rda-section">
         <div class="rda-table-title">Recommended Daily Allowance (RDA / AI)</div>
+        <div class="rda-table-scroll">
         <table class="rda-table" aria-label="RDA values for {{ nutrient.name }}">
           <thead>
             <tr>
@@ -284,6 +285,7 @@
             {% endfor %}
           </tbody>
         </table>
+        </div>
         <div class="food-source" style="margin-top:0.5rem;">
           <a href="{{ nutrient.rda_values[0].source.url }}" target="_blank" rel="noopener" class="source-link">
             {{ nutrient.rda_values[0].source.name }} ↗

@@ -42,6 +42,11 @@
 .cursor-dot.hovering {
   width: 28px; height: 28px;
 }
+/* Touch devices never fire mousemove, so the dot would otherwise sit
+   frozen at its default (0,0) position in the corner of every page. */
+@media (hover: none) and (pointer: coarse) {
+  .cursor-dot { display: none; }
+}
 
 html, a, button, input, select, textarea, label, [role="button"] { cursor: none !important; }
 
@@ -544,6 +549,10 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius);
   padding: 1.4rem;
   box-shadow: var(--shadow);
+  /* Without this, a grid item won't shrink below its content's intrinsic
+     width — a wide child (like the RDA table) would stretch the whole
+     shared grid column, blowing out every other column with it. */
+  min-width: 0;
 }
 .column-title {
   font-size: 0.78rem;
@@ -721,7 +730,8 @@ a:hover { text-decoration: underline; }
   margin-bottom: 0.6rem;
   font-family: var(--font-heading);
 }
-.rda-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.rda-table-scroll { overflow-x: auto; }
+.rda-table { width: 100%; min-width: 460px; border-collapse: collapse; font-size: 0.8rem; }
 .rda-table th {
   background: var(--card-fill);
   text-align: left;
@@ -1026,8 +1036,11 @@ a:hover { text-decoration: underline; }
   .hero { min-height: auto; }
   .hero-inner { padding: 3.5rem 1.2rem 3rem; }
   .nutrient-hero { flex-direction: column; text-align: center; gap: 0.75rem; }
+  .btn-nav { padding: 0.6rem 1.2rem; }
   .deco--pill-tr,
-  .deco--pill-bl { display: none; }
+  .deco--pill-bl,
+  .deco--arrow-tl,
+  .deco--arrow-br { display: none; }
 }
 @media (max-width: 500px) {
   .search-form { border-radius: var(--radius); }
