@@ -319,6 +319,21 @@ function initCollapsibleToggles() {
       toggle();
     });
   });
+
+  // On laptop/desktop, "Foods That Provide This Nutrient" and "Role in the
+  // Body" start expanded since there's room to show them right away; on
+  // mobile every section starts collapsed (matches the existing 768px
+  // breakpoint used elsewhere for the single-column layout).
+  if (window.matchMedia("(min-width: 769px)").matches) {
+    ["food-sources-toggle", "body-roles-toggle"].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const content = document.getElementById(btn.getAttribute("aria-controls"));
+      if (!content) return;
+      btn.setAttribute("aria-expanded", "true");
+      content.hidden = false;
+    });
+  }
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────────── */

@@ -554,17 +554,6 @@ a:hover { text-decoration: underline; }
      shared grid column, blowing out every other column with it. */
   min-width: 0;
 }
-.column-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--black);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--green);
-  font-family: var(--font-heading);
-}
 
 /* ─── Food Cards ────────────────────────────────────────────────────────── */
 .food-list {

@@ -103,7 +103,12 @@
 
     <!-- ── Left: Food Sources ────────────────────────────────────────── -->
     <div class="results-column">
-      <div class="column-title">🥩 Foods That Provide This Nutrient</div>
+      <button class="absorption-toggle" id="food-sources-toggle"
+              aria-expanded="false" aria-controls="food-sources-content">
+        🥩 Foods That Provide This Nutrient
+        <span class="absorption-chevron" aria-hidden="true">▼</span>
+      </button>
+      <div class="absorption-content" id="food-sources-content" hidden>
 
       {% if top_foods %}
       <ul class="food-list" id="food-list">
@@ -140,6 +145,7 @@
       {% else %}
       <p class="placeholder-msg">No food source data available yet for this nutrient.</p>
       {% endif %}
+      </div>
     </div>
 
     <!-- ── Middle: Absorption ─────────────────────────────────────────── -->
@@ -234,7 +240,12 @@
 
     <!-- ── Right: Body Roles + RDA ────────────────────────────────────── -->
     <div class="results-column">
-      <div class="column-title">🫀 Role in the Body</div>
+      <button class="absorption-toggle" id="body-roles-toggle"
+              aria-expanded="false" aria-controls="body-roles-content">
+        🫀 Role in the Body
+        <span class="absorption-chevron" aria-hidden="true">▼</span>
+      </button>
+      <div class="absorption-content" id="body-roles-content" hidden>
 
       {% if nutrient.body_roles %}
       {% for role in nutrient.body_roles %}
@@ -293,6 +304,7 @@
         </div>
       </div>
       {% endif %}
+      </div>
     </div>
 
   </div><!-- /results-grid -->
